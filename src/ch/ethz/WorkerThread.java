@@ -192,7 +192,8 @@ public class WorkerThread extends Thread {
             //-------------------------------------
 
             // check if get request and that we have only one key
-            if (!st.request.startsWith("get ") && (st.request.split(" ").length == 2)) {
+            if (!st.request.startsWith("get ") || 
+                (st.request.startsWith("get ") && !(st.request.split(" ").length == 2))) {
                 logger.error("NOT GET REQUEST (OR NOT CORRECT GET):\n" + st.request);
                 PrintWriter outputClient = null;
                 try {
