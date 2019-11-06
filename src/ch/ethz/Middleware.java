@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.ConsoleAppender;
@@ -20,10 +23,11 @@ public class Middleware {
     // connected clients array
     ArrayList<Socket> client;
     // reader for the corresponding client
-    ArrayList<BufferedReader> readers;
+    /*ArrayList<BufferedReader> readers;
+    ArrayList<PrintWriter> writers;*/
+    HashMap<Socket, BufferedReader> readers;
+    HashMap<Socket, PrintWriter> writers;
     // writer for the corresponding client
-    ArrayList<PrintWriter> writers;
-    
     // queue for ConnectionAcceptor to add new clients
     BlockingQueue<Socket> queue;
     // queue for adding requests
@@ -47,7 +51,7 @@ public class Middleware {
     public Middleware(String myIp, int myPort, List<String> mcAddresses, int numThreadsPTP, boolean readSharded) {
         
         ConsoleAppender console = new ConsoleAppender();
-        String PATTERN = "%m%n";
+        String PATTERN = "%p %c{2}: %m%n";
         console.setLayout(new PatternLayout(PATTERN)); 
         console.setThreshold(Level.DEBUG);
         console.activateOptions();
@@ -56,14 +60,22 @@ public class Middleware {
         this.client = new ArrayList<>();
         this.queue = new LinkedBlockingQueue<>(100);
         this.taskQueue = new LinkedBlockingQueue<>();
-        this.readers = new ArrayList<>();
-        this.writers = new ArrayList<>();
-
+        /*this.readers = new ArrayList<>();
+        this.writers = new ArrayList<>();*/
+        this.readers = new HashMap<>();
+        this.writers = new HashMap<>();
+        
 	// args from calling class
 	this.myIp = myIp;
         this.myPort = myPort;
         this.mcAddresses = mcAddresses;
         this.numThreads = numThreadsPTP;
+    }
+    
+    public void dump() {
+        for (int i = 0; i < this.numThreads; i++) {
+            this.threads.get(i).dump(0, Instant.now());
+        }
     }
 
     public void run () throws Exception {
@@ -82,41 +94,58 @@ public class Middleware {
       
         Thread connectionAcceptor = new ConnectionAcceptor(this.queue, this.myIp, this.myPort);
         connectionAcceptor.start();
+
+        HashMap<Socket, Instant> timeOuts = new HashMap();
         
-        /* add initial connection*/
-        this.client.add(this.queue.take());
-        this.readers.add(new BufferedReader( new InputStreamReader(this.client.
-                get(this.client.size() - 1).getInputStream())));
-        this.writers.add(new PrintWriter(this.client.get(this.client.size() - 1).getOutputStream(), true));
         
         while (true) {
-            for (int i = 0; i < this.client.size(); i++) {
-                BufferedReader in = this.readers.get(i);
+            
+            if (this.client.isEmpty()) {
+                Socket s = this.queue.take();
+                this.client.add(s);
+                logger.debug("[MIDDLEWARE] EXPERIMENT STARTED");
+                this.readers.put(this.client.get(0), 
+                                 new BufferedReader( new InputStreamReader(this.client.
+                                 get(this.client.size() - 1).getInputStream())));
+                this.writers.put(this.client.get(0), 
+                                 new PrintWriter(this.client.get(this.client.size() - 1).getOutputStream(), true));
+                timeOuts.put(s, Instant.now());
+            }
+            
+            for (ListIterator<Socket> iter = this.client.listIterator(); iter.hasNext();) {
+                
+                Socket curSocket = iter.next();
+                BufferedReader in = this.readers.get(curSocket);
                 StringBuilder finalRequest =  new StringBuilder();
                 
-                /*read input for current client if available*/
                 if (in.ready()) {
-                    // client could send at max 2 lines
-                    // we read 1st line
+                    
                     finalRequest.append(in.readLine()).append("\r\n");
                     while (in.ready()) {
-                        // read 2nd line
                         finalRequest.append(in.read()).append("\r\n");
                     }
 
-                    QueueStructure st = new QueueStructure(finalRequest.toString(), this.client.get(i));
+                    QueueStructure st = new QueueStructure(finalRequest.toString(), curSocket);
                     
-                    /* enqueue in task queue */
                     st.enqueueTime = Instant.now();
+                    timeOuts.replace(curSocket, st.enqueueTime);
                     this.taskQueue.add(st);
+                    
+                } else if (Duration.between(timeOuts.get(curSocket), Instant.now()).toMillis() > 5000) {
+                    iter.remove();
+                    logger.debug("CLIENT DISCONNECTED");
+                    continue;
                 }
                 
-                /*add new client if available*/
                 while (!this.queue.isEmpty()) {
-                    this.client.add(this.queue.take());
-                    this.readers.add(new BufferedReader( new InputStreamReader(this.client.
-                                                           get(this.client.size() - 1).getInputStream())));
-                    this.writers.add(new PrintWriter(this.client.get(this.client.size() - 1).getOutputStream(), true));
+                    Socket newSocket = this.queue.take();
+                    iter.add(newSocket);
+
+                    this.readers.put(newSocket,
+                                     new BufferedReader(new InputStreamReader(newSocket.getInputStream())));                   
+                    this.writers.put(newSocket, 
+                                     new PrintWriter(newSocket.getOutputStream(), true));      
+                    timeOuts.put(newSocket, Instant.now());
                 }
             }
         }

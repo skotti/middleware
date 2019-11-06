@@ -131,10 +131,14 @@ public class WorkerThread extends Thread {
     }
     
     
-    public void dump(long diff) {
+    public void dump(long diff, Instant time) {
         
+        if (diff == 0) {
+             diff = time.toEpochMilli()- startTime.toEpochMilli();
+        }
         StringBuilder log = new StringBuilder();
-        log.append(" ").append(Long.toString(timeInQueue))
+        log.append(threadNumber)
+              .append(" ").append(Long.toString(timeInQueue))
               .append(" ").append(Long.toString(timeInParseAndSend))
               .append(" ").append(Long.toString(timeInServer))
               .append(" ").append(Long.toString(timeToProcessRequest))
@@ -220,7 +224,7 @@ public class WorkerThread extends Thread {
                 sizeOfQueue > Long.MAX_VALUE / 2 ||
                 requestsLeftQueue > Long.MAX_VALUE / 2) {
                 long diff = Instant.now().toEpochMilli()- startTime.toEpochMilli();
-                dump(diff);
+                dump(diff, null);
             }
             //-------------------------------------
             //if (st != null) {
@@ -331,27 +335,10 @@ public class WorkerThread extends Thread {
                 System.out.println("thread" + this.threadNumber + ", " + "requestsPerServer[1]="+requestsPerServer[1]);
                 System.out.println("thread" + this.threadNumber + ", " + "requestsPerServer[2]="+requestsPerServer[2]);
             }*/
-
-            /*if (queueStat.length() > 500000) {
-                j++;
-                //System.out.println("write to file" + j);
-                try {
-                    writer = new FileWriter(fileName, true);
-                    writer.write(queueStat.toString());
-                    writer.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(WorkerThread.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                queueStat.setLength(0);
-                //System.out.println("############");
-            }*/
-            //st = null;
-            //}
-            
            
             long diff = Instant.now().toEpochMilli()- startTime.toEpochMilli();
             if (diff > 5000) {
-                dump(diff);
+                dump(diff, null);
             }
         }
     } 

@@ -9,6 +9,7 @@ public class RunMW {
 	static List<String> mcAddresses = null;
 	static int numThreadsPTP = -1;
 	static boolean readSharded = false;
+        static Middleware middleware;
 
 	public static void main(String[] args) throws Exception {
 
@@ -28,7 +29,8 @@ public class RunMW {
 		// Start the Middleware
 		// -----------------------------------------------------------------------------
 
-		new Middleware(myIp, myPort, mcAddresses, numThreadsPTP, readSharded).run();
+		middleware = new Middleware(myIp, myPort, mcAddresses, numThreadsPTP, readSharded);
+                middleware.run();//.run();
 
 	}
 
@@ -36,7 +38,8 @@ public class RunMW {
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 		    @Override
 		    public void run(){
-                // TODO - Shutdown middleware...
+                        System.out.println("SIGTERM call");
+                        middleware.dump();
 		    }
 		});
 	}
