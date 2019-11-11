@@ -10,17 +10,28 @@ populate_port=$4
 time=$5
 threads=$6
 
-value_size=(64 256 512 1024)
-n_clients=(4 8 16 32)
+value_size=(64) # 256 512 1024)
+n_clients=(4) # 8 16 32)
+n_workers=(3 3 3) # 8 32 64)
 
 for v in "${value_size[@]}"; do
     source populate.sh $populate_server $populate_port $v 60 
-    for c in "${n_clients[@]}"; do
-        cmd="$cmdpart --server=$server --port=$port --test-time=$time --data-size=$v --clients=$c --threads=$threads"
-	echo "RUN EXPERIMENT"
-        $cmd
+    for t in "${n_workers[@]}"; do
+	./start.sh $t
 	sleep 10s
-    done
+        for c in "${n_clients[@]}"; do
+            for value in {1..3}
+            do
+                cmd="$cmdpart --server=$server --port=$port --test-time=$time --data-size=$v --clients=$c --threads=$threads"
+	        echo "RUN EXPERIMENT"
+                $cmd
+	        sleep 10s
+            done
+        done
+        ./stop.sh
+	echo "STOPPED"
+	sleep 10s
+     done
 done
 
 echo "done"

@@ -108,7 +108,6 @@ public class WorkerThread extends Thread {
             outputs.add(new PrintWriter(servers.get(j).getOutputStream(), true));
             inputs.add(new BufferedReader(new InputStreamReader(servers.get(j).getInputStream())));
             requestsPerServer[j] = 0;
-            System.out.println("Connected to server " + j);
         }
         // thread id
         threadNumber = i;
@@ -137,7 +136,7 @@ public class WorkerThread extends Thread {
              diff = time.toEpochMilli()- startTime.toEpochMilli();
         }
         StringBuilder log = new StringBuilder();
-        log.append(threadNumber)
+        log.append("d ").append(threadNumber)
               .append(" ").append(Long.toString(timeInQueue))
               .append(" ").append(Long.toString(timeInParseAndSend))
               .append(" ").append(Long.toString(timeInServer))
@@ -146,16 +145,19 @@ public class WorkerThread extends Thread {
               .append(" ").append(Long.toString(sizeOfQueue))
               .append(" ").append(Long.toString(requestsLeftQueue))
               .append(" ").append(Long.toString(successfulRequests))
-              .append(" ").append(Long.toString(diff));
-        logger.debug(log + "\n");
+              .append(" ").append(Long.toString(diff).append("\n");
+        logger.debug(log);
         
         successfulRequests = 0;
-        timeInQueue = 0;
         sizeOfQueue = 0;
         requestsLeftQueue = 0;
+        timeInQueue = 0;
         timeInServer = 0;
+        timeInParseAndSend = 0;
+        timeToProcessRequest = 0;
+        timeToProcessRequestAndQueueTime = 0;
         cacheMisses = 0;
-        
+ 
         startTime = Instant.now();
     }
     
@@ -284,7 +286,6 @@ public class WorkerThread extends Thread {
                     in.read(part2, 0, numBytes + 2);
                     part3 = in.readLine();// END
                     if (!part3.startsWith("END")) {
-                        System.out.println("here3");
                         // some error
                         // read until the end all response
                         logger.info("UNKNOWN ERROR");

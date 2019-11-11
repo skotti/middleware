@@ -51,7 +51,7 @@ public class Middleware {
     public Middleware(String myIp, int myPort, List<String> mcAddresses, int numThreadsPTP, boolean readSharded) {
         
         ConsoleAppender console = new ConsoleAppender();
-        String PATTERN = "%p %c{2}: %m%n";
+        String PATTERN = "%p %c{2}: %m";
         console.setLayout(new PatternLayout(PATTERN)); 
         console.setThreshold(Level.DEBUG);
         console.activateOptions();
@@ -82,7 +82,6 @@ public class Middleware {
         
         /* manage threads*/
         this.threads = new ArrayList<>();
-        System.out.println("num threads ="+this.numThreads);
         for (int i = 0; i < this.numThreads; i++) {
             try {
                 this.threads.add(new WorkerThread(i, this.taskQueue, this.mcAddresses));
@@ -103,7 +102,7 @@ public class Middleware {
             if (this.client.isEmpty()) {
                 Socket s = this.queue.take();
                 this.client.add(s);
-                logger.debug("[MIDDLEWARE] EXPERIMENT STARTED");
+                logger.debug("[MIDDLEWARE] EXPERIMENT STARTED\n");
                 this.readers.put(this.client.get(0), 
                                  new BufferedReader( new InputStreamReader(this.client.
                                  get(this.client.size() - 1).getInputStream())));
@@ -133,7 +132,7 @@ public class Middleware {
                     
                 } else if (Duration.between(timeOuts.get(curSocket), Instant.now()).toMillis() > 5000) {
                     iter.remove();
-                    logger.debug("CLIENT DISCONNECTED");
+                    logger.debug("CLIENT DISCONNECTED\n");
                     continue;
                 }
                 
