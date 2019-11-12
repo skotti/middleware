@@ -36,7 +36,7 @@ for v in "${value_size[@]}"; do
 		pid2=$!
 		echo "$pid2"
 		# run script on client3
-		ssh azureuser@$client3ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${v} ${c} &>> ${HOME}/client3.log &'
+		ssh azureuser@$client3ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${v} ${c} &>> ${HOME}/client3.log &"
 		echo "CLIENT3 RUN"
 		#store pid
 		pid3=$!
