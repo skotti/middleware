@@ -1,4 +1,4 @@
 #!/bin/bash
 
-kill `cat mw.pid`
-rm mw.pid
+kill `cat $HOME/mw.pid`
+rm $HOME/mw.pid

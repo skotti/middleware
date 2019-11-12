@@ -1,5 +1,5 @@
 #!/bin/bash
-source environment.sh
+source /home/azureuser/asl-project-2019-ruzhanskaia/environment.sh
 populate_servers=($server1ip)
 populate_port=11210
 populate_time=60
@@ -24,19 +24,19 @@ for v in "${value_size[@]}"; do
             for value in {1..3}
 	    do
 		# run script on client1
-		/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh $middleware1iipp 11211 $test_time $memtier_threads $v $c &>> client1.log &
+		/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh $middleware1iipp 11211 $test_time $memtier_threads $v $c &>> $HOME/client1.log &
 		echo "CLIENT1 RUN"
 		# store pid
 		pid1=$!
 		echo "$pid1"
 		# run script on client2
-		ssh azureuser@$client2ip '/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh $middleware1ip 11211 $test_time $memtier_threads $v $c &>> client2.log &'
+		ssh azureuser@$client2ip '/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh $middleware1ip 11211 $test_time $memtier_threads $v $c &>> $HOME/client2.log &'
 		echo "CLIENT2 RUN"
 		# store pid
 		pid2=$!
 		echo "$pid2"
 		# run script on client3
-		ssh azureuser@$client3ip '/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh $middleware1ip 11211 $test_time $memtier_threads $v $c &>> client3.log &'
+		ssh azureuser@$client3ip '/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh $middleware1ip 11211 $test_time $memtier_threads $v $c &>> $HOME/client3.log &'
 		echo "CLIENT3 RUN"
 		#store pid
 		pid3=$!
