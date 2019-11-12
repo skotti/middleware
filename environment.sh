@@ -1,0 +1,17 @@
+#!/bin/bash
+client1=storekgxe7hn6wwfpqsshpublicip1.westeurope.cloudapp.azure.com
+client2=storekgxe7hn6wwfpqsshpublicip2.westeurope.cloudapp.azure.com
+client3=storekgxe7hn6wwfpqsshpublicip3.westeurope.cloudapp.azure.com
+client1ip=10.0.0.6
+client2ip=10.0.0.5
+client3ip=10.0.0.4
+middleware1=storekgxe7hn6wwfpqsshpublicip4.westeurope.cloudapp.azure.com
+middleware2=storekgxe7hn6wwfpqsshpublicip5.westeurope.cloudapp.azure.com
+middleware1ip=10.0.0.11
+middleware2ip=10.0.0.7
+server1=storekgxe7hn6wwfpqsshpublicip6.westeurope.cloudapp.azure.com
+server2=storekgxe7hn6wwfpqsshpublicip7.westeurope.cloudapp.azure.com
+server3=storekgxe7hn6wwfpqsshpublicip8.westeurope.cloudapp.azure.com
+server1ip=10.0.0.8
+server2ip=10.0.0.9
+server3ip=10.0.0.10
