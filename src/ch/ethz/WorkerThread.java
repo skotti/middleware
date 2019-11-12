@@ -145,7 +145,7 @@ public class WorkerThread extends Thread {
               .append(" ").append(Long.toString(sizeOfQueue))
               .append(" ").append(Long.toString(requestsLeftQueue))
               .append(" ").append(Long.toString(successfulRequests))
-              .append(" ").append(Long.toString(diff).append("\n");
+              .append(" ").append(Long.toString(diff)).append("\n");
         logger.debug(log);
         
         successfulRequests = 0;
