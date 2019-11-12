@@ -13,13 +13,13 @@ n_workers=(3 3) # 8 32 64)
 
 for v in "${value_size[@]}"; do
     for i in "${populate_servers[@]}"; do
-        ./populate.sh $i $populate_port $v $populate_time
+        /home/azureuser/asl-project-2019-ruzhanskaia/populate.sh $i $populate_port $v $populate_time
     for t in "${n_workers[@]}"; do
-	ssh azureuser@$middleware1 ./start.sh $middleware1 11211 $t
+	ssh azureuser@$middleware1 /home/azureuser/asl-project-2019-ruzhanskaia/start.sh $middleware1 11211 $t
         for c in "${n_clients[@]}"; do
             for value in {1..3}
 		# run script on client1
-		experiment.sh $middleware1 11211 $test_time $memtier_threads $v $c &
+		/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh $middleware1 11211 $test_time $memtier_threads $v $c &
 		# store pid
 		pid1=$!
 		# run script on client2
