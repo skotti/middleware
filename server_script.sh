@@ -1,4 +1,5 @@
 #!/bin/bash
+sudo apt update
 sudo apt install build-essential libevent-dev 
 sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 wget http://www.memcached.org/files/memcached-1.4.25.tar.gz
