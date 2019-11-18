@@ -99,6 +99,9 @@ public class WorkerThread extends Thread {
         }
 
         requestsPerServer = new int[nServers]; 
+        for (int j = 0; j < nServers; j++) {
+	    requestsPerServer[j] = 0;
+	}
         /* connect to the servers*/
         servers = new ArrayList<>();
         outputs = new ArrayList<>();
@@ -145,7 +148,13 @@ public class WorkerThread extends Thread {
               .append(" ").append(Long.toString(sizeOfQueue))
               .append(" ").append(Long.toString(requestsLeftQueue))
               .append(" ").append(Long.toString(successfulRequests))
-              .append(" ").append(Long.toString(diff)).append("\n");
+	      .append(" ");
+
+	/*for (int j = 0; j < nServers; j++) {
+            log.append(requestsPerServer[j]).append(" ");
+	}*/
+        log.append(Long.toString(diff)).append("\n");
+	
         logger.debug(log);
         
         successfulRequests = 0;
@@ -157,6 +166,10 @@ public class WorkerThread extends Thread {
         timeToProcessRequest = 0;
         timeToProcessRequestAndQueueTime = 0;
         cacheMisses = 0;
+
+	for (int j = 0; j < nServers; j++) {
+            requestsPerServer[j] = 0;
+        }
  
         startTime = Instant.now();
     }
@@ -172,7 +185,6 @@ public class WorkerThread extends Thread {
     
     @Override
     public void run() {
-        int i = 0;
         QueueStructure st = null;
         startTime = Instant.now();
         
@@ -184,13 +196,6 @@ public class WorkerThread extends Thread {
                 logger.error("WorkerThread exception", ex);
             }
             
-            // for measuring think time
-            // then think time = timeSendReceive / allRequestsLeftQueue
-            /*allRequestsLeftQueue += 1;
-            timeSendReceive += Duration.between(
-                                timeSend, 
-                                Instant.now()).toNanos();*/
-
             //-------------------------------------collect stats
             Instant dequeueTime = Instant.now();    //--------------------------------------------------------------------------end POINT1, time in queue
             Instant startParseAndSend = dequeueTime;//--------------------------------------------------------------------------start POINT2, time parse and send
@@ -253,7 +258,7 @@ public class WorkerThread extends Thread {
                 BufferedReader in = inputs.get(serverIndex);
                 part1 = in.readLine();
                 //--------------------------------------------------------------------------------------------------------------end POINT3, server processing
-                Instant serverProcessEnd = Instant.now();
+                //Instant serverProcessEnd = Instant.now();
                 //---------------------------------------
                 String[] parts = part1.split(" ");
                 if (!parts[0].equals("VALUE")) {
@@ -311,6 +316,10 @@ public class WorkerThread extends Thread {
                 }
 
                 //----------------------------------------collect stats
+		sendResponse(answerString.toString(),
+                             st.connection.getOutputStream());
+
+		Instant serverProcessEnd = Instant.now();
                 timeToProcessRequest += Duration.between(
                                        dequeueTime, 
                                        serverProcessEnd).toNanos();
@@ -323,20 +332,13 @@ public class WorkerThread extends Thread {
                 successfulRequests += 1;
                 //----------------------------------------
 
-                sendResponse(answerString.toString(),
-                             st.connection.getOutputStream());
+                //sendResponse(answerString.toString(),
+                //             st.connection.getOutputStream());
             } catch (IOException ex) {
                 logger.error("WorkerThread exception", ex);
             }
             serverIndex = (serverIndex + 1) % nServers;
 
-            // for checking even distribution
-            /*if (i == 4000) {
-                System.out.println("thread" + this.threadNumber + ", " + "requestsPerServer[0]="+requestsPerServer[0]);
-                System.out.println("thread" + this.threadNumber + ", " + "requestsPerServer[1]="+requestsPerServer[1]);
-                System.out.println("thread" + this.threadNumber + ", " + "requestsPerServer[2]="+requestsPerServer[2]);
-            }*/
-           
             long diff = Instant.now().toEpochMilli()- startTime.toEpochMilli();
             if (diff > 5000) {
                 dump(diff, null);

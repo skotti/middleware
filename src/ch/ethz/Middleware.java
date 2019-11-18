@@ -118,14 +118,12 @@ public class Middleware {
                 StringBuilder finalRequest =  new StringBuilder();
                 
                 if (in.ready()) {
-                    
                     finalRequest.append(in.readLine()).append("\r\n");
                     while (in.ready()) {
                         finalRequest.append(in.read()).append("\r\n");
                     }
 
                     QueueStructure st = new QueueStructure(finalRequest.toString(), curSocket);
-                    
                     st.enqueueTime = Instant.now();
                     timeOuts.replace(curSocket, st.enqueueTime);
                     this.taskQueue.add(st);
