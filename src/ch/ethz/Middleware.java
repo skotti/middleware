@@ -21,12 +21,13 @@ import org.apache.log4j.PatternLayout;
 
 public class Middleware {
     // connected clients array
-    ArrayList<Socket> client;
+    ArrayList<ConnectionStructure> connections;
+    //ArrayList<Socket> client;
     // reader for the corresponding client
     /*ArrayList<BufferedReader> readers;
     ArrayList<PrintWriter> writers;*/
-    HashMap<Socket, BufferedReader> readers;
-    HashMap<Socket, PrintWriter> writers;
+    //HashMap<Socket, BufferedReader> readers;
+    //HashMap<Socket, PrintWriter> writers;
     // writer for the corresponding client
     // queue for ConnectionAcceptor to add new clients
     BlockingQueue<Socket> queue;
@@ -57,16 +58,16 @@ public class Middleware {
         console.activateOptions();
         Logger.getRootLogger().addAppender(console);
         
-        this.client = new ArrayList<>();
+        this.connections = new ArrayList<>();
         this.queue = new LinkedBlockingQueue<>(100);
         this.taskQueue = new LinkedBlockingQueue<>();
         /*this.readers = new ArrayList<>();
         this.writers = new ArrayList<>();*/
-        this.readers = new HashMap<>();
-        this.writers = new HashMap<>();
+        //this.readers = new HashMap<>();
+        //this.writers = new HashMap<>();
         
 	// args from calling class
-	this.myIp = myIp;
+	    this.myIp = myIp;
         this.myPort = myPort;
         this.mcAddresses = mcAddresses;
         this.numThreads = numThreadsPTP;
@@ -94,56 +95,55 @@ public class Middleware {
         Thread connectionAcceptor = new ConnectionAcceptor(this.queue, this.myIp, this.myPort);
         connectionAcceptor.start();
 
-        HashMap<Socket, Instant> timeOuts = new HashMap();
+        HashMap<Socket, Instant> timeOuts = new HashMap<Socket, Instant>();
         
         
         while (true) {
             
-            if (this.client.isEmpty()) {
+            if (this.connections.isEmpty()) {
                 Socket s = this.queue.take();
-                this.client.add(s);
                 logger.debug("[MIDDLEWARE] EXPERIMENT STARTED\n");
-                this.readers.put(this.client.get(0), 
-                                 new BufferedReader( new InputStreamReader(this.client.
-                                 get(this.client.size() - 1).getInputStream())));
-                this.writers.put(this.client.get(0), 
-                                 new PrintWriter(this.client.get(this.client.size() - 1).getOutputStream(), true));
+                ConnectionStructure con = new ConnectionStructure(s, new BufferedReader(new InputStreamReader(s.getInputStream())), 
+                                                                     new PrintWriter(s.getOutputStream(), true), new char[256]);
+                this.connections.add(con);
                 timeOuts.put(s, Instant.now());
             }
             
-            for (ListIterator<Socket> iter = this.client.listIterator(); iter.hasNext();) {
+            for (ListIterator<ConnectionStructure> iter = this.connections.listIterator(); iter.hasNext();) {
                 
-                Socket curSocket = iter.next();
-                BufferedReader in = this.readers.get(curSocket);
+                ConnectionStructure curConn = iter.next();
+                BufferedReader in = curConn.reader;
                 StringBuilder finalRequest =  new StringBuilder();
                 
                 if (in.ready()) {
-                    finalRequest.append(in.readLine()).append("\r\n");
+                    Instant enqueueTime = Instant.now();
                     while (in.ready()) {
-                        finalRequest.append(in.read()).append("\r\n");
+                        int n = in.read(curConn.buffer, 0, 256);
+                        finalRequest.append(curConn.buffer, 0, n);
+                    }
+                    if (finalRequest.charAt(finalRequest.length() - 1) != '\n') {
+                        continue;
+                        //we need to read more until \n is read
                     }
 
-                    QueueStructure st = new QueueStructure(finalRequest.toString(), curSocket);
-                    st.enqueueTime = Instant.now();
-                    timeOuts.replace(curSocket, st.enqueueTime);
+                    QueueStructure st = new QueueStructure(finalRequest.toString(), curConn.socket);
+                    st.enqueueTime = enqueueTime;
+                    timeOuts.replace(curConn.socket, st.enqueueTime);
                     this.taskQueue.add(st);
                     
-                } else if (Duration.between(timeOuts.get(curSocket), Instant.now()).toMillis() > 5000) {
+                } else if (Duration.between(timeOuts.get(curConn.socket), Instant.now()).toMillis() > 5000) {
                     iter.remove();
                     logger.debug("CLIENT DISCONNECTED\n");
                     continue;
                 }
-                
-                while (!this.queue.isEmpty()) {
-                    Socket newSocket = this.queue.take();
-                    iter.add(newSocket);
+            }
 
-                    this.readers.put(newSocket,
-                                     new BufferedReader(new InputStreamReader(newSocket.getInputStream())));                   
-                    this.writers.put(newSocket, 
-                                     new PrintWriter(newSocket.getOutputStream(), true));      
-                    timeOuts.put(newSocket, Instant.now());
-                }
+            while (!this.queue.isEmpty()) {
+                Socket s = this.queue.take();
+                ConnectionStructure con = new ConnectionStructure(s, new BufferedReader(new InputStreamReader(s.getInputStream())), 
+                                                                     new PrintWriter(s.getOutputStream(), true), new char[256]);
+                connections.add(con);    
+                timeOuts.put(s, Instant.now());
             }
         }
     }

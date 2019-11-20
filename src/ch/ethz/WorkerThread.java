@@ -21,9 +21,10 @@ public class WorkerThread extends Thread {
         - one to read from server
         - one to write to client
     */
-    ArrayList<Socket> servers;
+    ArrayList<ConnectionStructure> connections;
+    /*ArrayList<Socket> servers;
     ArrayList<PrintWriter> outputs;
-    ArrayList<BufferedReader> inputs;
+    ArrayList<BufferedReader> inputs;*/
     
     // we don't need private queue for self managed workers
     LinkedBlockingQueue<QueueStructure> taskQueue;
@@ -99,17 +100,23 @@ public class WorkerThread extends Thread {
         }
 
         requestsPerServer = new int[nServers]; 
-        for (int j = 0; j < nServers; j++) {
-	    requestsPerServer[j] = 0;
-	}
+
         /* connect to the servers*/
-        servers = new ArrayList<>();
-        outputs = new ArrayList<>();
-        inputs = new ArrayList<>();
+        connections = new ArrayList<>();
+        //servers = new ArrayList<>();
+        //outputs = new ArrayList<>();
+        //inputs = new ArrayList<>();
         for (int j = 0; j < nServers; j++) {
-            servers.add(new Socket(ipArray.get(j), portArray.get(j)));
-            outputs.add(new PrintWriter(servers.get(j).getOutputStream(), true));
-            inputs.add(new BufferedReader(new InputStreamReader(servers.get(j).getInputStream())));
+            Socket s = new Socket(ipArray.get(j), portArray.get(j));
+            ConnectionStructure con = 
+                                    new ConnectionStructure(s,
+                                    new BufferedReader(new InputStreamReader(s.getInputStream())), 
+                                    new PrintWriter(s.getOutputStream(), true),
+                                    new char[256]);
+            connections.add(con);
+            //servers.add(new Socket(ipArray.get(j), portArray.get(j)));
+            //outputs.add(new PrintWriter(servers.get(j).getOutputStream(), true));
+            //inputs.add(new BufferedReader(new InputStreamReader(servers.get(j).getInputStream())));
             requestsPerServer[j] = 0;
         }
         // thread id
@@ -240,9 +247,10 @@ public class WorkerThread extends Thread {
             // for correct answer to get request we will have three parts
             StringBuilder answerString = new StringBuilder();
             String part1, part3;
+            //String part1, part3;
 
-            outputs.get(serverIndex).write(st.request);
-            outputs.get(serverIndex).flush();
+            connections.get(serverIndex).writer.write(st.request);
+            connections.get(serverIndex).writer.flush();
             
             //-------------------------------------collect stats
             requestsPerServer[serverIndex] += 1;
@@ -255,12 +263,12 @@ public class WorkerThread extends Thread {
 
             try {
 
-                BufferedReader in = inputs.get(serverIndex);
+                BufferedReader in = connections.get(serverIndex).reader;
                 part1 = in.readLine();
                 //--------------------------------------------------------------------------------------------------------------end POINT3, server processing
                 //Instant serverProcessEnd = Instant.now();
                 //---------------------------------------
-                String[] parts = part1.split(" ");
+                String[] parts = part1.toString().split(" ");
                 if (!parts[0].equals("VALUE")) {
                     if (parts[0].startsWith("END")) {
                         //cache miss
@@ -276,20 +284,28 @@ public class WorkerThread extends Thread {
                         logger.info("UKNOWN ERROR\n");
                         answerString.append(part1).append("\r\n");
                         while (in.ready()) {
-                            answerString.append(in.read()).append("\r\n");
+                            answerString.append(in.read());
                         }
+                        answerString.append("\r\n")
                         sendResponse(answerString.toString(),
                                      st.connection.getOutputStream());
                         continue;
                     }
                 } else {
                     // get numBytes to read as data
-                    // reserver two for \r\n
+                    
                     int numBytes = Integer.parseInt(parts[3]);
-                    char[] part2 = new char[numBytes +2];
 
-                    in.read(part2, 0, numBytes + 2);
+                    int bytesToBeRead = numBytes + 2; // reserve two for \r\n
+                    char[] part2 = new char[bytesToBeRead];
+
+                    int offset = 0;
+                    while (offset != bytesToBeRead) {
+                        offset = in.read(part2, offset, bytesToBeRead - offset);
+                    }
+                    
                     part3 = in.readLine();// END
+
                     if (!part3.startsWith("END")) {
                         // some error
                         // read until the end all response
@@ -316,10 +332,10 @@ public class WorkerThread extends Thread {
                 }
 
                 //----------------------------------------collect stats
-		sendResponse(answerString.toString(),
+		        sendResponse(answerString.toString(),
                              st.connection.getOutputStream());
 
-		Instant serverProcessEnd = Instant.now();
+		        Instant serverProcessEnd = Instant.now();
                 timeToProcessRequest += Duration.between(
                                        dequeueTime, 
                                        serverProcessEnd).toNanos();
