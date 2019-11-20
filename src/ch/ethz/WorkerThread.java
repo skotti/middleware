@@ -286,7 +286,7 @@ public class WorkerThread extends Thread {
                         while (in.ready()) {
                             answerString.append(in.read());
                         }
-                        answerString.append("\r\n")
+                        answerString.append("\r\n");
                         sendResponse(answerString.toString(),
                                      st.connection.getOutputStream());
                         continue;
