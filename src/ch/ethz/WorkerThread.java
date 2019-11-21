@@ -155,11 +155,11 @@ public class WorkerThread extends Thread {
               .append(" ").append(Long.toString(sizeOfQueue))
               .append(" ").append(Long.toString(requestsLeftQueue))
               .append(" ").append(Long.toString(successfulRequests))
-	      .append(" ");
+            .append(" ");
 
-	/*for (int j = 0; j < nServers; j++) {
-            log.append(requestsPerServer[j]).append(" ");
-	}*/
+        for (int j = 0; j < nServers; j++) {
+                log.append(requestsPerServer[j]).append(" ");
+        }
         log.append(Long.toString(diff)).append("\n");
 	
         logger.debug(log);
@@ -174,7 +174,7 @@ public class WorkerThread extends Thread {
         timeToProcessRequestAndQueueTime = 0;
         cacheMisses = 0;
 
-	for (int j = 0; j < nServers; j++) {
+        for (int j = 0; j < nServers; j++) {
             requestsPerServer[j] = 0;
         }
  
@@ -332,16 +332,17 @@ public class WorkerThread extends Thread {
                 }
 
                 //----------------------------------------collect stats
+                Instant serverProcessEnd = Instant.now();
 		        sendResponse(answerString.toString(),
                              st.connection.getOutputStream());
 
-		        Instant serverProcessEnd = Instant.now();
+		        Instant workerProcessEnd = Instant.now();
                 timeToProcessRequest += Duration.between(
                                        dequeueTime, 
-                                       serverProcessEnd).toNanos();
+                                       workerProcessEnd).toNanos();
                 timeToProcessRequestAndQueueTime += Duration.between(
                                                     st.enqueueTime, 
-                                                    serverProcessEnd).toNanos();
+                                                    workerProcessEnd).toNanos();
                 timeInServer += Duration.between(
                                         serverProcessStart,
                                         serverProcessEnd).toNanos();

@@ -116,7 +116,6 @@ public class Middleware {
                 StringBuilder finalRequest =  new StringBuilder();
                 
                 if (in.ready()) {
-                    Instant enqueueTime = Instant.now();
                     while (in.ready()) {
                         int n = in.read(curConn.buffer, 0, 256);
                         finalRequest.append(curConn.buffer, 0, n);
@@ -125,7 +124,7 @@ public class Middleware {
                         continue;
                         //we need to read more until \n is read
                     }
-
+                    Instant enqueueTime = Instant.now();
                     QueueStructure st = new QueueStructure(finalRequest.toString(), curConn.socket);
                     st.enqueueTime = enqueueTime;
                     timeOuts.replace(curConn.socket, st.enqueueTime);

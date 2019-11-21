@@ -1,6 +1,5 @@
 #!/bin/bash
 source /home/azureuser/asl-project-2019-ruzhanskaia/environment.sh
-populate_server=$server1ip
 populate_port=11210
 populate_time=1000
 key_size=10000
@@ -13,7 +12,7 @@ n_clients=(4 8 16 32)
 n_workers=(32) # 8 64)
 
 for v in "${value_size[@]}"; do
-    /home/azureuser/asl-project-2019-ruzhanskaia/populate.sh $populate_server $populate_port $v $populate_time $key_size
+    /home/azureuser/asl-project-2019-ruzhanskaia/populate_3servers.sh $populate_port $v $populate_time $key_size
     for t in "${n_workers[@]}"; do
 	ssh azureuser@$middleware1ip "/home/azureuser/asl-project-2019-ruzhanskaia/start.sh ${middleware1ip} 11211 ${t}"
 	sleep 10s
