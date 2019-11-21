@@ -14,7 +14,7 @@ n_workers=(32) # 8 64)
 for v in "${value_size[@]}"; do
     /home/azureuser/asl-project-2019-ruzhanskaia/populate_3servers.sh $populate_port $v $populate_time $key_size
     for t in "${n_workers[@]}"; do
-	ssh azureuser@$middleware1ip "/home/azureuser/asl-project-2019-ruzhanskaia/start.sh ${middleware1ip} 11211 ${t}"
+	ssh azureuser@$middleware1ip "/home/azureuser/asl-project-2019-ruzhanskaia/start_3servers.sh ${middleware1ip} 11211 ${t}"
 	sleep 10s
         for c in "${n_clients[@]}"; do
             for value in {1..3}
