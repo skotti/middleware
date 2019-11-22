@@ -1,11 +1,11 @@
 #!/bin/bash
-client1=storekgxe7hn6wwfpqsshpublicip1.westeurope.cloudapp.azure.com
-client2=storekgxe7hn6wwfpqsshpublicip2.westeurope.cloudapp.azure.com
-client3=storekgxe7hn6wwfpqsshpublicip3.westeurope.cloudapp.azure.com
+client1=storekgxe7hn6wwfpqsshpublicip1.eastus.cloudapp.azure.com
+client2=storekgxe7hn6wwfpqsshpublicip2.eastus.cloudapp.azure.com
+client3=storekgxe7hn6wwfpqsshpublicip3.eastus.cloudapp.azure.com
 client1ip=10.0.0.6
 client2ip=10.0.0.11
 client3ip=10.0.0.10
-middleware1=storekgxe7hn6wwfpqsshpublicip4.westeurope.cloudapp.azure.com
+middleware1=storekgxe7hn6wwfpqsshpublicip4.eastus.cloudapp.azure.com
 middleware2=storekgxe7hn6wwfpqsshpublicip5.westeurope.cloudapp.azure.com
 middleware1ip=10.0.0.5
 middleware2ip=10.0.0.8

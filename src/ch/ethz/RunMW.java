@@ -1,5 +1,6 @@
 package ch.ethz;
 
+import java.time.Instant;
 import java.util.*;
 
 public class RunMW {
@@ -39,7 +40,7 @@ public class RunMW {
 		    @Override
 		    public void run(){
                         System.out.println("SIGTERM call");
-                        middleware.dump();
+                        middleware.dump(Instant.now());
 		    }
 		});
 	}

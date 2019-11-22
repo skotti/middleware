@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.ConsoleAppender;
@@ -46,6 +47,7 @@ public class Middleware {
     List<String> mcAddresses = null;
     // logger
     final static Logger logger = Logger.getLogger(Middleware.class);
+    Timer statsPrinter;
     
     //ConcurrentLinkedQueue<QueueStructure> taskQueue;
     
@@ -73,9 +75,9 @@ public class Middleware {
         this.numThreads = numThreadsPTP;
     }
     
-    public void dump() {
+    public void dump(Instant time) {
         for (int i = 0; i < this.numThreads; i++) {
-            this.threads.get(i).dump(0, Instant.now());
+            this.threads.get(i).additionalDump(time);
         }
     }
 
@@ -86,16 +88,25 @@ public class Middleware {
         for (int i = 0; i < this.numThreads; i++) {
             try {
                 this.threads.add(new WorkerThread(i, this.taskQueue, this.mcAddresses));
+                
             } catch (IOException ex) {
                 logger.error("Middleware exception", ex);
             }
             this.threads.get(i).start();
         }
+
+        StatPrinter printer = new StatPrinter(this.threads);
+        Timer timer = new Timer("StatPrinter");
+     
+        long delay  = 1;
+        long period = 5000;
+        timer.scheduleAtFixedRate(printer, delay, period);
       
         Thread connectionAcceptor = new ConnectionAcceptor(this.queue, this.myIp, this.myPort);
         connectionAcceptor.start();
 
         HashMap<Socket, Instant> timeOuts = new HashMap<Socket, Instant>();
+        
         
         
         while (true) {

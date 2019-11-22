@@ -22,9 +22,6 @@ public class WorkerThread extends Thread {
         - one to write to client
     */
     ArrayList<ConnectionStructure> connections;
-    /*ArrayList<Socket> servers;
-    ArrayList<PrintWriter> outputs;
-    ArrayList<BufferedReader> inputs;*/
     
     // we don't need private queue for self managed workers
     LinkedBlockingQueue<QueueStructure> taskQueue;
@@ -74,17 +71,7 @@ public class WorkerThread extends Thread {
     long timeSendReceive;
     Instant timeSend;
     
-    //left variables, that may be used later
-    //BlockingQueue<QueueStructure> queue;
-    //ConcurrentLinkedQueue<QueueStructure> taskQueue;
-    //number of get Operations during all execution
-    //int getOperationsNumber;
-    //FileWriter writer;
-    //String fileName;
-    //ConcurrentLinkedQueue<StatsCollector> stats;
-    
     public WorkerThread(int i, LinkedBlockingQueue<QueueStructure> taskQueue,
-                        /*ConcurrentLinkedQueue<QueueStructure> taskQueue*/
                         List<String> serverAddrs) throws IOException {
         
         /* set up predefined addresses currently, for local testing*/
@@ -103,9 +90,7 @@ public class WorkerThread extends Thread {
 
         /* connect to the servers*/
         connections = new ArrayList<>();
-        //servers = new ArrayList<>();
-        //outputs = new ArrayList<>();
-        //inputs = new ArrayList<>();
+
         for (int j = 0; j < nServers; j++) {
             Socket s = new Socket(ipArray.get(j), portArray.get(j));
             ConnectionStructure con = 
@@ -114,9 +99,6 @@ public class WorkerThread extends Thread {
                                     new PrintWriter(s.getOutputStream(), true),
                                     new char[256]);
             connections.add(con);
-            //servers.add(new Socket(ipArray.get(j), portArray.get(j)));
-            //outputs.add(new PrintWriter(servers.get(j).getOutputStream(), true));
-            //inputs.add(new BufferedReader(new InputStreamReader(servers.get(j).getInputStream())));
             requestsPerServer[j] = 0;
         }
         // thread id
@@ -139,12 +121,8 @@ public class WorkerThread extends Thread {
         timeSendReceive = 0;
     }
     
-    
-    public void dump(long diff, Instant time) {
+    public String createLogString() {
         
-        if (diff == 0) {
-             diff = time.toEpochMilli()- startTime.toEpochMilli();
-        }
         StringBuilder log = new StringBuilder();
         log.append("d ").append(threadNumber)
               .append(" ").append(Long.toString(timeInQueue))
@@ -160,10 +138,8 @@ public class WorkerThread extends Thread {
         for (int j = 0; j < nServers; j++) {
                 log.append(requestsPerServer[j]).append(" ");
         }
-        log.append(Long.toString(diff)).append("\n");
-	
-        logger.debug(log);
-        
+        log.append('\n');
+	        
         successfulRequests = 0;
         sizeOfQueue = 0;
         requestsLeftQueue = 0;
@@ -177,7 +153,20 @@ public class WorkerThread extends Thread {
         for (int j = 0; j < nServers; j++) {
             requestsPerServer[j] = 0;
         }
- 
+
+        startTime = Instant.now();
+        return log.toString();
+    }
+
+    public String getStats() {
+        return createLogString();
+    }
+
+    public void additionalDump(Instant time) {
+        StringBuilder log = new StringBuilder();
+        log.append(createLogString());
+        log.append(Long.toString(time.toEpochMilli()- startTime.toEpochMilli()));
+        logger.debug(createLogString());
         startTime = Instant.now();
     }
     
@@ -237,8 +226,8 @@ public class WorkerThread extends Thread {
             if (timeInQueue > Long.MAX_VALUE / 2 ||
                 sizeOfQueue > Long.MAX_VALUE / 2 ||
                 requestsLeftQueue > Long.MAX_VALUE / 2) {
-                long diff = Instant.now().toEpochMilli()- startTime.toEpochMilli();
-                dump(diff, null);
+                //long diff = Instant.now().toEpochMilli()- startTime.toEpochMilli();
+                additionalDump(Instant.now());
             }
             //-------------------------------------
             //if (st != null) {
@@ -348,18 +337,10 @@ public class WorkerThread extends Thread {
                                         serverProcessEnd).toNanos();
                 successfulRequests += 1;
                 //----------------------------------------
-
-                //sendResponse(answerString.toString(),
-                //             st.connection.getOutputStream());
             } catch (IOException ex) {
                 logger.error("WorkerThread exception", ex);
             }
             serverIndex = (serverIndex + 1) % nServers;
-
-            long diff = Instant.now().toEpochMilli()- startTime.toEpochMilli();
-            if (diff > 5000) {
-                dump(diff, null);
-            }
         }
     } 
 }
