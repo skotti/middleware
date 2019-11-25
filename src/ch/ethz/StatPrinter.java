@@ -53,6 +53,9 @@ class StatPrinter extends TimerTask {
             }
             //logger.debug(globalStats);
         }
-	logger.debug(globalStats.toString()+"\n");
+        logger.debug(globalStats.toString()+"\n");
+        for (int i = 0; i < this.threads.size(); i++) {
+            prevStats.set(i, curStats.get(i));
+        }
     }
 }
