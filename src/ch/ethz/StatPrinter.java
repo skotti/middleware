@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.TimerTask;
 import org.apache.log4j.Logger;
 
-
-
 class StatPrinter extends TimerTask {
     ArrayList<WorkerThread> threads;
 
@@ -13,7 +11,6 @@ class StatPrinter extends TimerTask {
 
     ArrayList<WorkerStats> curStats;
     ArrayList<WorkerStats> prevStats;
-    
 
     StatPrinter(ArrayList<WorkerThread> threads) {
         this.threads = threads;
@@ -25,6 +22,12 @@ class StatPrinter extends TimerTask {
         }
     }
 
+    public /*synchronized*/ void setStats(int i, WorkerStats stats) throws CloneNotSupportedException {
+        //synchronized(stats) {
+            this.curStats.set(i, (WorkerStats) stats.clone());
+        //}
+    }
+
     public void dumpAtShutdown() {
 
     }
@@ -32,15 +35,24 @@ class StatPrinter extends TimerTask {
     @Override
     public void run() {
         StringBuilder globalStats = new StringBuilder();
+
         for (int i = 0; i < this.threads.size(); i++) {
-            curStats.set(i, this.threads.get(i).getStats());
+            try {
+                setStats(i, this.threads.get(i).getStats());
+                //this.threads.get(i).getStats(curStats.get(i));
+                //synchronized(this.threads.get(i).getStats()) {
+                //    curStats.set(i, (WorkerStats)this.threads.get(i).getStats().clone());
+                //}
+			} catch (CloneNotSupportedException e) {
+				e.printStackTrace();
+			}
         }
-        for (int i = 0; i < this .threads.size(); i++) {
+        for (int i = 0; i < this.threads.size(); i++) {
             WorkerStats cur = curStats.get(i);
             WorkerStats prev = prevStats.get(i);
 
             globalStats.append("\n").append(Long.toString(curStats.get(i).worker)).append(" ");
-            globalStats.append(Long.toString(cur.timeInQueue - prev.timeInQueue)).append(" ");
+            globalStats.append(cur.timeInQueue - prev.timeInQueue).append(" ");
             globalStats.append(Long.toString(cur.timeInParseAndSend - prev.timeInParseAndSend)).append(" ");
             globalStats.append(Long.toString(cur.timeInServer - prev.timeInServer)).append(" ");
             globalStats.append(Long.toString(cur.timeToProcessRequest - prev.timeToProcessRequest)).append(" ");
@@ -51,11 +63,14 @@ class StatPrinter extends TimerTask {
             for (int j = 0; j < cur.nServers; j++) {
                 globalStats.append(Long.toString(cur.requestsPerServer[j] - prev.requestsPerServer[j])).append(" ");
             }
-            //logger.debug(globalStats);
         }
         logger.debug(globalStats.toString()+"\n");
         for (int i = 0; i < this.threads.size(); i++) {
-            prevStats.set(i, curStats.get(i));
+				try {
+                    prevStats.set(i, (WorkerStats)curStats.get(i).clone());
+				} catch (CloneNotSupportedException e) {
+					e.printStackTrace();
+				}
         }
     }
 }

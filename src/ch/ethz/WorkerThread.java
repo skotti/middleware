@@ -113,17 +113,14 @@ public class WorkerThread extends Thread {
         return log.toString();
     }*/
 
+    /*public void getStats(WorkerStats statsToUpdate) throws CloneNotSupportedException {
+        synchronized(this.stats) {
+            statsToUpdate = (WorkerStats)this.stats.clone();
+        }
+    }*/
     public WorkerStats getStats() {
         return this.stats;
     }
-
-    /*public void additionalDump(Instant time) {
-        StringBuilder log = new StringBuilder();
-        log.append(createLogString());
-        log.append(Long.toString(time.toEpochMilli()- startTime.toEpochMilli()));
-        logger.debug(createLogString());
-        startTime = Instant.now();
-    }*/
     
     public void sendResponse(String answerString, OutputStream stream) {
         PrintWriter outputClient = new PrintWriter(stream, true);
@@ -169,9 +166,6 @@ public class WorkerThread extends Thread {
             long timeElapsed = Duration.between(
                     st.enqueueTime, 
                     dequeueTime).toNanos();
-            stats.timeInQueue += timeElapsed;
-            stats.requestsLeftQueue += 1;
-            stats.sizeOfQueue += sizeOfCurrentQueue;
 
             // send request to one of the server in round robin manner
             // for correct answer to get request we will have three parts
@@ -182,12 +176,8 @@ public class WorkerThread extends Thread {
             connections.get(serverIndex).writer.write(st.request);
             connections.get(serverIndex).writer.flush();
             
-            //-------------------------------------collect stats
-            stats.requestsPerServer[serverIndex] += 1;
+            //-------------------------------------
             Instant endParseAndSend = Instant.now();//-------------------------------------------------------------------------end POINT2, time parse and send
-            stats.timeInParseAndSend += Duration.between(
-                    startParseAndSend, 
-                    endParseAndSend).toNanos();
             Instant serverProcessStart = endParseAndSend;//--------------------------------------------------------------------start POINT3, server processing
             //-------------------------------------
 
@@ -266,7 +256,17 @@ public class WorkerThread extends Thread {
 		        sendResponse(answerString.toString(),
                              st.connection.getOutputStream());
 
-		        Instant workerProcessEnd = Instant.now();
+                Instant workerProcessEnd = Instant.now();
+
+                // collect all stats------------------------------------------------------------
+                stats.requestsPerServer[serverIndex] += 1;
+                stats.timeInParseAndSend += Duration.between(
+                        startParseAndSend, 
+                        endParseAndSend).toNanos();
+                
+                stats.timeInQueue += timeElapsed;
+                stats.requestsLeftQueue += 1;
+                stats.sizeOfQueue += sizeOfCurrentQueue;
                 stats.timeToProcessRequest += Duration.between(
                                        dequeueTime, 
                                        workerProcessEnd).toNanos();

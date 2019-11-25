@@ -1,6 +1,6 @@
 package ch.ethz;
 
-class WorkerStats {
+class WorkerStats implements Cloneable {
      //thread number
      int worker;
      // requests, that returned from the server with positive answer
@@ -32,7 +32,7 @@ class WorkerStats {
 
      public WorkerStats(int worker, int nServers) {
 
-	  this.worker = worker;
+	     this.worker = worker;
           successfulRequests = 0;
           timeInQueue = 0;
           sizeOfQueue = 0;
@@ -50,4 +50,14 @@ class WorkerStats {
 
           this.nServers = nServers;
      }
+
+     @Override
+     protected Object clone() throws CloneNotSupportedException {
+          WorkerStats cloned;
+          //synchronized (this) {
+               cloned = (WorkerStats) super.clone();
+               cloned.requestsPerServer = cloned.requestsPerServer.clone();
+          //}
+          return cloned;
+    }
 }
