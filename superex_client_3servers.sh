@@ -35,15 +35,15 @@ for v in "${value_size[@]}"; do
             pid8=$!
             ssh azureuser@$client3ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${server31p} 11210 ${test_time} ${memtier_threads} ${v} ${c} &>> ${HOME}/client3_3.log" &
 	    pid9=$!
-	    wait $p1
-	    wait $p2
-	    wait $p3
-	    wait $p4
-            wait $p5
-            wait $p6
-            wait $p7
-            wait $p8
-            wait $p9
+	    wait $pid1
+	    wait $pid2
+	    wait $pid3
+	    wait $pid4
+            wait $pid5
+            wait $pid6
+            wait $pid7
+            wait $pid8
+            wait $pid9
 	    sleep 10s
 	done
     done

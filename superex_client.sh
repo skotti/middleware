@@ -22,9 +22,9 @@ for v in "${value_size[@]}"; do
 	    pid2=$!
 	    ssh azureuser@$client3ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${serveri1p} 11210 ${test_time} ${memtier_threads} ${v} ${c} &>> ${HOME}/client3.log" &
 	    pid3=$!
-	    wait $p1
-	    wait $p2
-	    wait $p3
+	    wait $pid1
+	    wait $pid2
+	    wait $pid3
 	    sleep 10s
 	done
     done

@@ -28,11 +28,11 @@ for v in "${value_size[@]}"; do
 		ssh azureuser@$client3ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${v} ${c} ${key_size} &>> ${HOME}/client3.log" &
 		pid3=$!
 		# wait script on client1
-		wait $p1
+		wait $pid1
 		# wait script on client2
-		wait $p2
+		wait $pid2
 		# wait script on client3
-		wait $p3
+		wait $pid3
 		sleep 10s
 	    done
 	done
