@@ -10,7 +10,7 @@ public class RunMW {
 	static List<String> mcAddresses = null;
 	static int numThreadsPTP = -1;
 	static boolean readSharded = false;
-        static Middleware middleware;
+	static Middleware middleware;
 
 	public static void main(String[] args) throws Exception {
 

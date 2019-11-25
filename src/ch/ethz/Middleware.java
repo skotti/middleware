@@ -22,14 +22,7 @@ import org.apache.log4j.PatternLayout;
 
 public class Middleware {
     // connected clients array
-    ArrayList<ConnectionStructure> connections;
-    //ArrayList<Socket> client;
-    // reader for the corresponding client
-    /*ArrayList<BufferedReader> readers;
-    ArrayList<PrintWriter> writers;*/
-    //HashMap<Socket, BufferedReader> readers;
-    //HashMap<Socket, PrintWriter> writers;
-    // writer for the corresponding client
+    ArrayList<Connection> connections;
     // queue for ConnectionAcceptor to add new clients
     BlockingQueue<Socket> queue;
     // queue for adding requests
@@ -48,6 +41,8 @@ public class Middleware {
     // logger
     final static Logger logger = Logger.getLogger(Middleware.class);
     Timer statsPrinter;
+
+    StatPrinter printer;
     
     //ConcurrentLinkedQueue<QueueStructure> taskQueue;
     
@@ -63,10 +58,6 @@ public class Middleware {
         this.connections = new ArrayList<>();
         this.queue = new LinkedBlockingQueue<>(100);
         this.taskQueue = new LinkedBlockingQueue<>();
-        /*this.readers = new ArrayList<>();
-        this.writers = new ArrayList<>();*/
-        //this.readers = new HashMap<>();
-        //this.writers = new HashMap<>();
         
 	// args from calling class
 	    this.myIp = myIp;
@@ -76,9 +67,7 @@ public class Middleware {
     }
     
     public void dump(Instant time) {
-        for (int i = 0; i < this.numThreads; i++) {
-            this.threads.get(i).additionalDump(time);
-        }
+        printer.dumpAtShutdown();
     }
 
     public void run () throws Exception {
@@ -95,7 +84,7 @@ public class Middleware {
             this.threads.get(i).start();
         }
 
-        StatPrinter printer = new StatPrinter(this.threads);
+        printer = new StatPrinter(this.threads);
         Timer timer = new Timer("StatPrinter");
      
         long delay  = 1;
@@ -114,23 +103,26 @@ public class Middleware {
             if (this.connections.isEmpty()) {
                 Socket s = this.queue.take();
                 logger.debug("[MIDDLEWARE] EXPERIMENT STARTED\n");
-                ConnectionStructure con = new ConnectionStructure(s, new BufferedReader(new InputStreamReader(s.getInputStream())), 
+                Connection con = new Connection(s, new BufferedReader(new InputStreamReader(s.getInputStream())), 
                                                                      new PrintWriter(s.getOutputStream(), true), new char[256]);
                 this.connections.add(con);
                 timeOuts.put(s, Instant.now());
             }
-            
-            for (ListIterator<ConnectionStructure> iter = this.connections.listIterator(); iter.hasNext();) {
+
+            for (ListIterator<Connection> iter = this.connections.listIterator(); iter.hasNext();) {
                 
-                ConnectionStructure curConn = iter.next();
+                Connection curConn = iter.next();
                 BufferedReader in = curConn.reader;
-                StringBuilder finalRequest =  new StringBuilder();
+                StringBuilder finalRequest = curConn.request;
                 
                 if (in.ready()) {
                     while (in.ready()) {
                         int n = in.read(curConn.buffer, 0, 256);
                         finalRequest.append(curConn.buffer, 0, n);
                     }
+
+                    // if we managed to read one line, then we just forward it.
+                    // it will either correct GET requests or just something
                     if (finalRequest.charAt(finalRequest.length() - 1) != '\n') {
                         continue;
                         //we need to read more until \n is read
@@ -140,7 +132,7 @@ public class Middleware {
                     st.enqueueTime = enqueueTime;
                     timeOuts.replace(curConn.socket, st.enqueueTime);
                     this.taskQueue.add(st);
-                    
+                    curConn.request.setLength(0);
                 } else if (Duration.between(timeOuts.get(curConn.socket), Instant.now()).toMillis() > 5000) {
                     iter.remove();
                     logger.debug("CLIENT DISCONNECTED\n");
@@ -150,7 +142,7 @@ public class Middleware {
 
             while (!this.queue.isEmpty()) {
                 Socket s = this.queue.take();
-                ConnectionStructure con = new ConnectionStructure(s, new BufferedReader(new InputStreamReader(s.getInputStream())), 
+                Connection con = new Connection(s, new BufferedReader(new InputStreamReader(s.getInputStream())), 
                                                                      new PrintWriter(s.getOutputStream(), true), new char[256]);
                 connections.add(con);    
                 timeOuts.put(s, Instant.now());

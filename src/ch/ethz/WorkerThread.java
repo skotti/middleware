@@ -21,7 +21,7 @@ public class WorkerThread extends Thread {
         - one to read from server
         - one to write to client
     */
-    ArrayList<ConnectionStructure> connections;
+    ArrayList<Connection> connections;
     
     // we don't need private queue for self managed workers
     LinkedBlockingQueue<QueueStructure> taskQueue;
@@ -34,42 +34,9 @@ public class WorkerThread extends Thread {
     // time when worker started working ( for statistics dump)
     Instant startTime;
     
-    // requests, that returned from the server with positive answer
-    int successfulRequests;
-    
-    // we don't want to write delta, spend in queue, by every element
-    // so we accumulate
-     
-    // accumulated time, spent by reqeusts in queue
-    long timeInQueue;
-    // accumulated sizes of queue after each dequeing
-    long sizeOfQueue;
-    // requests, for which we are counting this time
-    long requestsLeftQueue;
-    // accumulated service processing (server + sending) time for successful requests
-    long timeInServer;
-    // accumulated processin time between getting from queue ans sending to server
-    long timeInParseAndSend;
-    // accumulated overall response time in middleware
-    long timeToProcessRequest;
-    // accumulated time to process request plus queue time
-    long timeToProcessRequestAndQueueTime;
-    // accumulated cache misses
-    int cacheMisses;
-    // accumulated error strings
-    StringBuilder errors;
-    // used for calculating the think time
-    long allRequestsLeftQueue = 0;
-    
-    // logger
+    WorkerStats stats;
+
     final static Logger logger = Logger.getLogger(WorkerThread.class);
-    
-    // for internal debug
-    int[] requestsPerServer;
-    
-    // for think time
-    long timeSendReceive;
-    Instant timeSend;
     
     public WorkerThread(int i, LinkedBlockingQueue<QueueStructure> taskQueue,
                         List<String> serverAddrs) throws IOException {
@@ -86,42 +53,27 @@ public class WorkerThread extends Thread {
             portArray.add(Integer.parseInt(data[1]));
         }
 
-        requestsPerServer = new int[nServers]; 
-
         /* connect to the servers*/
         connections = new ArrayList<>();
 
         for (int j = 0; j < nServers; j++) {
             Socket s = new Socket(ipArray.get(j), portArray.get(j));
-            ConnectionStructure con = 
-                                    new ConnectionStructure(s,
+            Connection con = 
+                                    new Connection(s,
                                     new BufferedReader(new InputStreamReader(s.getInputStream())), 
                                     new PrintWriter(s.getOutputStream(), true),
                                     new char[256]);
             connections.add(con);
-            requestsPerServer[j] = 0;
         }
         // thread id
         threadNumber = i;
         // start sending to server 0
         serverIndex = 0;
         
-        // for requests statistics
-        successfulRequests = 0;
-        // for statistics ( all for accumulation)
-        timeInQueue = 0;
-        sizeOfQueue = 0;
-        requestsLeftQueue = 0;
-        timeInServer = 0;
-        timeToProcessRequest = 0;
-        timeToProcessRequestAndQueueTime = 0;
-        cacheMisses = 0;
-        allRequestsLeftQueue = 0;
-        errors = new StringBuilder();
-        timeSendReceive = 0;
+        stats = new WorkerStats(threadNumber, nServers);
     }
     
-    public String createLogString() {
+    /*public String createLogString() {
         
         StringBuilder log = new StringBuilder();
         log.append("d ").append(threadNumber)
@@ -134,7 +86,10 @@ public class WorkerThread extends Thread {
               .append(" ").append(Long.toString(requestsLeftQueue))
               .append(" ").append(Long.toString(successfulRequests))
             .append(" ");
-
+        long timeElapsed = Duration.between(
+                startTime, 
+                Instant.now()).toNanos();
+        log.append(Long.toString(timeElapsed)).append(" ");
         for (int j = 0; j < nServers; j++) {
                 log.append(requestsPerServer[j]).append(" ");
         }
@@ -156,25 +111,22 @@ public class WorkerThread extends Thread {
 
         startTime = Instant.now();
         return log.toString();
+    }*/
+
+    public WorkerStats getStats() {
+        return this.stats;
     }
 
-    public String getStats() {
-        return createLogString();
-    }
-
-    public void additionalDump(Instant time) {
+    /*public void additionalDump(Instant time) {
         StringBuilder log = new StringBuilder();
         log.append(createLogString());
         log.append(Long.toString(time.toEpochMilli()- startTime.toEpochMilli()));
         logger.debug(createLogString());
         startTime = Instant.now();
-    }
+    }*/
     
     public void sendResponse(String answerString, OutputStream stream) {
         PrintWriter outputClient = new PrintWriter(stream, true);
-        // for measuring once a think time
-        timeSend = Instant.now();
-        
         outputClient.write(answerString);
         outputClient.flush();
     }
@@ -209,7 +161,6 @@ public class WorkerThread extends Thread {
                     logger.error("WorkerThread exception", ex);
                 }
                 outputClient.write("END\r\n");
-                //outputClient.write("ERROR\r\n");
                 outputClient.flush();
                 continue;
             }
@@ -218,20 +169,10 @@ public class WorkerThread extends Thread {
             long timeElapsed = Duration.between(
                     st.enqueueTime, 
                     dequeueTime).toNanos();
-            timeInQueue += timeElapsed;
-            requestsLeftQueue += 1;
-            sizeOfQueue += sizeOfCurrentQueue;
+            stats.timeInQueue += timeElapsed;
+            stats.requestsLeftQueue += 1;
+            stats.sizeOfQueue += sizeOfCurrentQueue;
 
-            // see if we should dump
-            if (timeInQueue > Long.MAX_VALUE / 2 ||
-                sizeOfQueue > Long.MAX_VALUE / 2 ||
-                requestsLeftQueue > Long.MAX_VALUE / 2) {
-                //long diff = Instant.now().toEpochMilli()- startTime.toEpochMilli();
-                additionalDump(Instant.now());
-            }
-            //-------------------------------------
-            //if (st != null) {
-            
             // send request to one of the server in round robin manner
             // for correct answer to get request we will have three parts
             StringBuilder answerString = new StringBuilder();
@@ -242,9 +183,9 @@ public class WorkerThread extends Thread {
             connections.get(serverIndex).writer.flush();
             
             //-------------------------------------collect stats
-            requestsPerServer[serverIndex] += 1;
+            stats.requestsPerServer[serverIndex] += 1;
             Instant endParseAndSend = Instant.now();//-------------------------------------------------------------------------end POINT2, time parse and send
-            timeInParseAndSend += Duration.between(
+            stats.timeInParseAndSend += Duration.between(
                     startParseAndSend, 
                     endParseAndSend).toNanos();
             Instant serverProcessStart = endParseAndSend;//--------------------------------------------------------------------start POINT3, server processing
@@ -262,7 +203,7 @@ public class WorkerThread extends Thread {
                     if (parts[0].startsWith("END")) {
                         //cache miss
                         logger.info("CACHE MISS\n");
-                        cacheMisses += 1;
+                        stats.cacheMisses += 1;
                         answerString.append("END\r\n");
                         sendResponse(answerString.toString(), 
                                      st.connection.getOutputStream());
@@ -326,16 +267,16 @@ public class WorkerThread extends Thread {
                              st.connection.getOutputStream());
 
 		        Instant workerProcessEnd = Instant.now();
-                timeToProcessRequest += Duration.between(
+                stats.timeToProcessRequest += Duration.between(
                                        dequeueTime, 
                                        workerProcessEnd).toNanos();
-                timeToProcessRequestAndQueueTime += Duration.between(
+                stats.timeToProcessRequestAndQueueTime += Duration.between(
                                                     st.enqueueTime, 
                                                     workerProcessEnd).toNanos();
-                timeInServer += Duration.between(
+                stats.timeInServer += Duration.between(
                                         serverProcessStart,
                                         serverProcessEnd).toNanos();
-                successfulRequests += 1;
+                stats.successfulRequests += 1;
                 //----------------------------------------
             } catch (IOException ex) {
                 logger.error("WorkerThread exception", ex);
