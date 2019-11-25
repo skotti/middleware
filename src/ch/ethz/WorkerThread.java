@@ -259,24 +259,26 @@ public class WorkerThread extends Thread {
                 Instant workerProcessEnd = Instant.now();
 
                 // collect all stats------------------------------------------------------------
-                stats.requestsPerServer[serverIndex] += 1;
-                stats.timeInParseAndSend += Duration.between(
-                        startParseAndSend, 
-                        endParseAndSend).toNanos();
-                
-                stats.timeInQueue += timeElapsed;
-                stats.requestsLeftQueue += 1;
-                stats.sizeOfQueue += sizeOfCurrentQueue;
-                stats.timeToProcessRequest += Duration.between(
-                                       dequeueTime, 
-                                       workerProcessEnd).toNanos();
-                stats.timeToProcessRequestAndQueueTime += Duration.between(
-                                                    st.enqueueTime, 
-                                                    workerProcessEnd).toNanos();
-                stats.timeInServer += Duration.between(
-                                        serverProcessStart,
-                                        serverProcessEnd).toNanos();
-                stats.successfulRequests += 1;
+                synchronized(stats) {
+                    stats.requestsPerServer[serverIndex] += 1;
+                    stats.timeInParseAndSend += Duration.between(
+                            startParseAndSend, 
+                            endParseAndSend).toNanos();
+                    
+                    stats.timeInQueue += timeElapsed;
+                    stats.requestsLeftQueue += 1;
+                    stats.sizeOfQueue += sizeOfCurrentQueue;
+                    stats.timeToProcessRequest += Duration.between(
+                                        dequeueTime, 
+                                        workerProcessEnd).toNanos();
+                    stats.timeToProcessRequestAndQueueTime += Duration.between(
+                                                        st.enqueueTime, 
+                                                        workerProcessEnd).toNanos();
+                    stats.timeInServer += Duration.between(
+                                            serverProcessStart,
+                                            serverProcessEnd).toNanos();
+                    stats.successfulRequests += 1;
+                }
                 //----------------------------------------
             } catch (IOException ex) {
                 logger.error("WorkerThread exception", ex);

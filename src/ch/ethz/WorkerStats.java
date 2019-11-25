@@ -54,10 +54,27 @@ class WorkerStats implements Cloneable {
      @Override
      protected Object clone() throws CloneNotSupportedException {
           WorkerStats cloned;
-          //synchronized (this) {
-               cloned = (WorkerStats) super.clone();
-               cloned.requestsPerServer = cloned.requestsPerServer.clone();
-          //}
+          cloned = (WorkerStats) super.clone();
+          cloned.requestsPerServer = cloned.requestsPerServer.clone();
           return cloned;
     }
+
+     public void copy(WorkerStats other) {
+          synchronized(this) {
+               other.worker = this.worker;
+               other.successfulRequests = this.successfulRequests;
+               other.timeInQueue = this.timeInQueue;
+               other.sizeOfQueue = this.sizeOfQueue;
+               other.requestsLeftQueue = this.requestsLeftQueue;
+               other.timeInServer = this.timeInServer;
+               other.timeToProcessRequest = this.timeToProcessRequest;
+               other.timeToProcessRequestAndQueueTime = this.timeToProcessRequestAndQueueTime;
+
+               other.nServers = this.nServers;
+               other.requestsPerServer = new int[3];
+               for (int j = 0; j < nServers; j++) {
+                    other.requestsPerServer[j] = this.requestsPerServer[j];
+               }
+          }
+     }
 }

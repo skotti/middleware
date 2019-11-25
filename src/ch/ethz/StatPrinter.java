@@ -22,12 +22,6 @@ class StatPrinter extends TimerTask {
         }
     }
 
-    public /*synchronized*/ void setStats(int i, WorkerStats stats) throws CloneNotSupportedException {
-        //synchronized(stats) {
-            this.curStats.set(i, (WorkerStats) stats.clone());
-        //}
-    }
-
     public void dumpAtShutdown() {
 
     }
@@ -37,15 +31,7 @@ class StatPrinter extends TimerTask {
         StringBuilder globalStats = new StringBuilder();
 
         for (int i = 0; i < this.threads.size(); i++) {
-            try {
-                setStats(i, this.threads.get(i).getStats());
-                //this.threads.get(i).getStats(curStats.get(i));
-                //synchronized(this.threads.get(i).getStats()) {
-                //    curStats.set(i, (WorkerStats)this.threads.get(i).getStats().clone());
-                //}
-			} catch (CloneNotSupportedException e) {
-				e.printStackTrace();
-			}
+            this.threads.get(i).getStats().copy(curStats.get(i));
         }
         for (int i = 0; i < this.threads.size(); i++) {
             WorkerStats cur = curStats.get(i);
