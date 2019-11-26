@@ -38,6 +38,7 @@ class WorkerStats implements Cloneable {
           sizeOfQueue = 0;
           requestsLeftQueue = 0;
           timeInServer = 0;
+          timeInParseAndSend = 0;
           timeToProcessRequest = 0;
           timeToProcessRequestAndQueueTime = 0;
           cacheMisses = 0;
@@ -67,6 +68,7 @@ class WorkerStats implements Cloneable {
                other.sizeOfQueue = this.sizeOfQueue;
                other.requestsLeftQueue = this.requestsLeftQueue;
                other.timeInServer = this.timeInServer;
+               other.timeInParseAndSend = this.timeInParseAndSend;
                other.timeToProcessRequest = this.timeToProcessRequest;
                other.timeToProcessRequestAndQueueTime = this.timeToProcessRequestAndQueueTime;
 
