@@ -98,7 +98,7 @@ class StatPrinter extends TimerTask {
                 globalStats.append("\nERRORS:\n");
                 globalStats.append(cur.errors.substring(cur.errors.length() - prev.errors.length()));
             }
-            globalStats.append(Long.toString(5000));
+            globalStats.append(" ").append(Long.toString(5000));
             
         }
         logger.debug(globalStats.toString()+"\n");
