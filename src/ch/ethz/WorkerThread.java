@@ -73,51 +73,6 @@ public class WorkerThread extends Thread {
         stats = new WorkerStats(threadNumber, nServers);
     }
     
-    /*public String createLogString() {
-        
-        StringBuilder log = new StringBuilder();
-        log.append("d ").append(threadNumber)
-              .append(" ").append(Long.toString(timeInQueue))
-              .append(" ").append(Long.toString(timeInParseAndSend))
-              .append(" ").append(Long.toString(timeInServer))
-              .append(" ").append(Long.toString(timeToProcessRequest))
-              .append(" ").append(Long.toString(timeToProcessRequestAndQueueTime))
-              .append(" ").append(Long.toString(sizeOfQueue))
-              .append(" ").append(Long.toString(requestsLeftQueue))
-              .append(" ").append(Long.toString(successfulRequests))
-            .append(" ");
-        long timeElapsed = Duration.between(
-                startTime, 
-                Instant.now()).toNanos();
-        log.append(Long.toString(timeElapsed)).append(" ");
-        for (int j = 0; j < nServers; j++) {
-                log.append(requestsPerServer[j]).append(" ");
-        }
-        log.append('\n');
-	        
-        successfulRequests = 0;
-        sizeOfQueue = 0;
-        requestsLeftQueue = 0;
-        timeInQueue = 0;
-        timeInServer = 0;
-        timeInParseAndSend = 0;
-        timeToProcessRequest = 0;
-        timeToProcessRequestAndQueueTime = 0;
-        cacheMisses = 0;
-
-        for (int j = 0; j < nServers; j++) {
-            requestsPerServer[j] = 0;
-        }
-
-        startTime = Instant.now();
-        return log.toString();
-    }*/
-
-    /*public void getStats(WorkerStats statsToUpdate) throws CloneNotSupportedException {
-        synchronized(this.stats) {
-            statsToUpdate = (WorkerStats)this.stats.clone();
-        }
-    }*/
     public WorkerStats getStats() {
         return this.stats;
     }
@@ -173,12 +128,13 @@ public class WorkerThread extends Thread {
             String part1, part3;
             //String part1, part3;
 
+            Instant serverProcessStart = Instant.now();
             connections.get(serverIndex).writer.write(st.request);
             connections.get(serverIndex).writer.flush();
             
             //-------------------------------------
             Instant endParseAndSend = Instant.now();//-------------------------------------------------------------------------end POINT2, time parse and send
-            Instant serverProcessStart = endParseAndSend;//--------------------------------------------------------------------start POINT3, server processing
+            //Instant serverProcessStart = endParseAndSend;//--------------------------------------------------------------------start POINT3, server processing
             //-------------------------------------
 
             try {

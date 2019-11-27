@@ -67,7 +67,7 @@ public class Middleware {
     }
     
     public void dump(Instant time) {
-        printer.dumpAtShutdown();
+        printer.dumpAtShutdown(time);
     }
 
     public void run () throws Exception {

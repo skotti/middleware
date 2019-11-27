@@ -1,5 +1,7 @@
 package ch.ethz;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.TimerTask;
 import org.apache.log4j.Logger;
@@ -12,6 +14,8 @@ class StatPrinter extends TimerTask {
     ArrayList<WorkerStats> curStats;
     ArrayList<WorkerStats> prevStats;
 
+    Instant timeOfLastDump;
+
     StatPrinter(ArrayList<WorkerThread> threads) {
         this.threads = threads;
         prevStats = new ArrayList<WorkerStats>();
@@ -20,14 +24,10 @@ class StatPrinter extends TimerTask {
             prevStats.add(new WorkerStats(0, 0));
             curStats.add(new WorkerStats(0, 0));
         }
+        timeOfLastDump = Instant.now();
     }
 
-    public void dumpAtShutdown() {
-
-    }
-
-    @Override
-    public void run() {
+    public void dumpAtShutdown(Instant time) {
         StringBuilder globalStats = new StringBuilder();
 
         for (int i = 0; i < this.threads.size(); i++) {
@@ -49,6 +49,56 @@ class StatPrinter extends TimerTask {
             for (int j = 0; j < cur.nServers; j++) {
                 globalStats.append(Long.toString(cur.requestsPerServer[j] - prev.requestsPerServer[j])).append(" ");
             }
+            globalStats.append(Long.toString(cur.cacheMisses - prev.cacheMisses)).append(" ");
+            if (cur.errors.length() != prev.errors.length()) {
+                globalStats.append("\nERRORS:\n");
+                globalStats.append(cur.errors.substring(cur.errors.length() - prev.errors.length()));
+            }
+            long timeElapsed = Duration.between(
+                    timeOfLastDump, 
+                    time).toMillis();
+            globalStats.append(Long.toString(timeElapsed));
+        }
+        logger.debug(globalStats.toString()+"\n");
+        for (int i = 0; i < this.threads.size(); i++) {
+				try {
+                    prevStats.set(i, (WorkerStats)curStats.get(i).clone());
+				} catch (CloneNotSupportedException e) {
+					e.printStackTrace();
+				}
+        }
+    }
+
+    @Override
+    public void run() {
+        StringBuilder globalStats = new StringBuilder();
+
+        for (int i = 0; i < this.threads.size(); i++) {
+            this.threads.get(i).getStats().copy(curStats.get(i));
+        }
+        timeOfLastDump = Instant.now();
+        for (int i = 0; i < this.threads.size(); i++) {
+            WorkerStats cur = curStats.get(i);
+            WorkerStats prev = prevStats.get(i);
+
+            globalStats.append("\n").append(Long.toString(curStats.get(i).worker)).append(" ");
+            globalStats.append(cur.timeInQueue - prev.timeInQueue).append(" ");
+            globalStats.append(Long.toString(cur.timeInParseAndSend - prev.timeInParseAndSend)).append(" ");
+            globalStats.append(Long.toString(cur.timeInServer - prev.timeInServer)).append(" ");
+            globalStats.append(Long.toString(cur.timeToProcessRequest - prev.timeToProcessRequest)).append(" ");
+            globalStats.append(Long.toString(cur.timeToProcessRequestAndQueueTime - prev.timeToProcessRequestAndQueueTime)).append(" ");
+            globalStats.append(Long.toString(cur.sizeOfQueue - prev.sizeOfQueue)).append(" ");
+            globalStats.append(Long.toString(cur.requestsLeftQueue - prev.requestsLeftQueue)).append(" ");
+            globalStats.append(Long.toString(cur.successfulRequests - prev.successfulRequests)).append(" ");
+            for (int j = 0; j < cur.nServers; j++) {
+                globalStats.append(Long.toString(cur.requestsPerServer[j] - prev.requestsPerServer[j])).append(" ");
+            }
+            globalStats.append(Long.toString(cur.cacheMisses - prev.cacheMisses));
+            if (cur.errors.length() != prev.errors.length()) {
+                globalStats.append("\nERRORS:\n");
+                globalStats.append(cur.errors.substring(cur.errors.length() - prev.errors.length()));
+            }
+            
         }
         logger.debug(globalStats.toString()+"\n");
         for (int i = 0; i < this.threads.size(); i++) {

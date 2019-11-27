@@ -77,6 +77,10 @@ class WorkerStats implements Cloneable {
                for (int j = 0; j < nServers; j++) {
                     other.requestsPerServer[j] = this.requestsPerServer[j];
                }
+
+               other.cacheMisses = this.cacheMisses;
+               other.errors.setLength(0);
+               other.errors.append(this.errors);
           }
      }
 }

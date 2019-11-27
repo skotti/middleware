@@ -31,7 +31,7 @@ public class RunMW {
 		// -----------------------------------------------------------------------------
 
 		middleware = new Middleware(myIp, myPort, mcAddresses, numThreadsPTP, readSharded);
-                middleware.run();//.run();
+                middleware.run();
 
 	}
 
@@ -39,8 +39,8 @@ public class RunMW {
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 		    @Override
 		    public void run(){
-                        System.out.println("SIGTERM call");
-                        middleware.dump(Instant.now());
+				System.out.println("SIGTERM call");
+				middleware.dump(Instant.now());
 		    }
 		});
 	}
