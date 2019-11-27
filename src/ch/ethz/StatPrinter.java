@@ -61,11 +61,11 @@ class StatPrinter extends TimerTask {
         }
         logger.debug(globalStats.toString()+"\n");
         for (int i = 0; i < this.threads.size(); i++) {
-				try {
-                    prevStats.set(i, (WorkerStats)curStats.get(i).clone());
-				} catch (CloneNotSupportedException e) {
-					e.printStackTrace();
-				}
+            try {
+                prevStats.set(i, (WorkerStats)curStats.get(i).clone());
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -98,15 +98,16 @@ class StatPrinter extends TimerTask {
                 globalStats.append("\nERRORS:\n");
                 globalStats.append(cur.errors.substring(cur.errors.length() - prev.errors.length()));
             }
+            globalStats.append(Long.toString(5000));
             
         }
         logger.debug(globalStats.toString()+"\n");
         for (int i = 0; i < this.threads.size(); i++) {
-				try {
-                    prevStats.set(i, (WorkerStats)curStats.get(i).clone());
-				} catch (CloneNotSupportedException e) {
-					e.printStackTrace();
-				}
+            try {
+                prevStats.set(i, (WorkerStats)curStats.get(i).clone());
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
