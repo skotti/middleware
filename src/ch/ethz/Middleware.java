@@ -31,7 +31,6 @@ public class Middleware {
     ArrayList<WorkerThread> threads;
     // number of worker threads
     int numThreads = -1;
-    
     // ip on which middleware is running
     String myIp;
     // port on which middlewae is running
@@ -40,10 +39,12 @@ public class Middleware {
     List<String> mcAddresses = null;
     // logger
     final static Logger logger = Logger.getLogger(Middleware.class);
-    Timer statsPrinter;
-
+    // printing statistics
     StatPrinter printer;
-    
+    // wake up printing statistics thread every 5 seconds
+    Timer timer;
+    // thread which is accepting connections
+    Thread connectionAcceptor;
     //ConcurrentLinkedQueue<QueueStructure> taskQueue;
     
     public Middleware(String myIp, int myPort, List<String> mcAddresses, int numThreadsPTP, boolean readSharded) {
@@ -59,19 +60,22 @@ public class Middleware {
         this.queue = new LinkedBlockingQueue<>(100);
         this.taskQueue = new LinkedBlockingQueue<>();
         
-	// args from calling class
-	    this.myIp = myIp;
+        this.myIp = myIp;
         this.myPort = myPort;
         this.mcAddresses = mcAddresses;
         this.numThreads = numThreadsPTP;
     }
     
-    public void dump(Instant time) {
+    public void dumpAtShutdown(Instant time) {
         printer.dumpAtShutdown(time);
     }
 
+    public void stopTimer() {
+        timer.cancel();
+        timer.purge();
+    }
+
     public void run () throws Exception {
-        
         /* manage threads*/
         this.threads = new ArrayList<>();
         for (int i = 0; i < this.numThreads; i++) {
@@ -85,29 +89,18 @@ public class Middleware {
         }
 
         printer = new StatPrinter(this.threads);
-        Timer timer = new Timer("StatPrinter");
+        timer = new Timer("StatPrinter");
      
         long delay  = 1;
         long period = 5000;
         timer.scheduleAtFixedRate(printer, delay, period);
       
-        Thread connectionAcceptor = new ConnectionAcceptor(this.queue, this.myIp, this.myPort);
+        connectionAcceptor = new ConnectionAcceptor(this.queue, this.myIp, this.myPort);
         connectionAcceptor.start();
 
         HashMap<Socket, Instant> timeOuts = new HashMap<Socket, Instant>();
         
-        
-        
         while (true) {
-            
-            if (this.connections.isEmpty()) {
-                Socket s = this.queue.take();
-                logger.debug("[MIDDLEWARE] EXPERIMENT STARTED\n");
-                Connection con = new Connection(s, new BufferedReader(new InputStreamReader(s.getInputStream())), 
-                                                                     new PrintWriter(s.getOutputStream(), true), new char[256]);
-                this.connections.add(con);
-                timeOuts.put(s, Instant.now());
-            }
 
             for (ListIterator<Connection> iter = this.connections.listIterator(); iter.hasNext();) {
                 
@@ -120,7 +113,6 @@ public class Middleware {
                         int n = in.read(curConn.buffer, 0, 256);
                         finalRequest.append(curConn.buffer, 0, n);
                     }
-
                     // if we managed to read one line, then we just forward it.
                     // it will either correct GET requests or just something
                     if (finalRequest.charAt(finalRequest.length() - 1) != '\n') {
@@ -133,6 +125,7 @@ public class Middleware {
                     timeOuts.replace(curConn.socket, st.enqueueTime);
                     this.taskQueue.add(st);
                     curConn.request.setLength(0);
+
                 } else if (Duration.between(timeOuts.get(curConn.socket), Instant.now()).toMillis() > 5000) {
                     iter.remove();
                     logger.debug("CLIENT DISCONNECTED\n");

@@ -40,7 +40,8 @@ public class RunMW {
 		    @Override
 		    public void run(){
 				System.out.println("SIGTERM call");
-				middleware.dump(Instant.now());
+				middleware.dumpAtShutdown(Instant.now());
+				middleware.stopTimer();
 		    }
 		});
 	}

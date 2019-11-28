@@ -19,5 +19,3 @@ pid3=$!
 wait pid1
 wait pid2
 wait pid3
-
-#/home/skotti/asl/memtier_benchmark/install/bin/memtier_benchmark --port=$populate_port --protocol=memcache_text --ratio=1:0 --hide-histogram --expiry-range=9999-10000 --key-maximum=100 --server=$populate_server --test-time=$populate_time --clients=4 --threads=3 --data-size=$populate_size

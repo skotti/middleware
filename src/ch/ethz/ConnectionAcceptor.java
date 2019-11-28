@@ -29,8 +29,7 @@ public class ConnectionAcceptor extends Thread {
     }
     
     @Override
-    public void run() {
-           
+    public void run() {  
         try {
             serverSocket = new ServerSocket(port, 0, ip);
             while (true) {
@@ -38,7 +37,7 @@ public class ConnectionAcceptor extends Thread {
             }
         } catch (IOException | InterruptedException ex) {
             logger.error("ConnectionAcceptor exception", ex);
+            return;
         }
-        
     }
 }
