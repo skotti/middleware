@@ -2,6 +2,7 @@
 source /home/azureuser/asl-project-2019-ruzhanskaia/environment.sh
 test_time=$2
 repetitions=$3
+key_size=$4
 memtier_threads=2
 value_size=$1
 n_clients=(4 8 16 32)
