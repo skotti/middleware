@@ -15,11 +15,11 @@ for t in "${n_workers[@]}"; do
         for value in {1..$repetitions}
         do
     	# run script on client1
-    	ssh azureuser@$client1ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${v} ${c} ${key_size} &>> ${HOME}/client1.log" &
+    	ssh azureuser@$client1ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${value_size} ${c} ${key_size} &>> ${HOME}/client1.log" &
     	pid1=$!
-    	ssh azureuser@$client2ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${v} ${c} ${key_size} &>> ${HOME}/client2.log" &
+    	ssh azureuser@$client2ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${value_size} ${c} ${key_size} &>> ${HOME}/client2.log" &
     	pid2=$!
-    	ssh azureuser@$client3ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${v} ${c} ${key_size} &>> ${HOME}/client3.log" &
+    	ssh azureuser@$client3ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${value_size} ${c} ${key_size} &>> ${HOME}/client3.log" &
     	pid3=$!
     	# wait script on client1
     	wait $pid1
