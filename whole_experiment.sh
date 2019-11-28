@@ -2,7 +2,7 @@
 source /home/azureuser/asl-project-2019-ruzhanskaia/environment.sh
 populate_port=11210
 populate_time=100
-populate_key_size=64
+populate_key_size=100
 test_time=60
 repetitions=3
 
