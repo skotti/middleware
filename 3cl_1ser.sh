@@ -15,7 +15,7 @@ for c in "${n_clients[@]}"; do
     	pid1=$!
 	ssh azureuser@$client2ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${server1ip} 11210 ${test_time} ${memtier_threads} ${value_size} ${c} ${key_size} &>> ${HOME}/client2.log" &
 	pid2=$!
-	ssh azureuser@$client3ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${serveri1p} 11210 ${test_time} ${memtier_threads} ${value_size} ${c} ${key_size} &>> ${HOME}/client3.log" &
+	ssh azureuser@$client3ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${server1ip} 11210 ${test_time} ${memtier_threads} ${value_size} ${c} ${key_size} &>> ${HOME}/client3.log" &
 	pid3=$!
 	wait $pid1
 	wait $pid2
