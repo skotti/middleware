@@ -8,7 +8,7 @@ value_size=$1
 n_clients=(4 8 16 32)
 
 for c in "${n_clients[@]}"; do
-    for value in {1..$repetitions}
+    for value in {1..3}
     do
         # run script on client1
         ssh azureuser@$client1ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${server1ip} 11210 ${test_time} ${memtier_threads} ${value_size} ${c} ${key_size} &>> ${HOME}/client1_1.log" &
@@ -43,5 +43,3 @@ for c in "${n_clients[@]}"; do
         sleep 10s
     done
 done
-echo "DONE 2nd part"
-sleep 10s

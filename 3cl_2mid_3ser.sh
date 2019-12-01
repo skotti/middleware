@@ -10,10 +10,10 @@ n_workers=(8 32 64)
 
 for t in "${n_workers[@]}"; do
     ssh azureuser@$middleware1ip "/home/azureuser/asl-project-2019-ruzhanskaia/start_3servers.sh ${middleware1ip} 11211 ${t}"
-    ssh azureuser@$middleware2ip "/home/azureuser/asl-project-2019-ruzhanskaia/start.sh ${middleware2ip} 11211 ${t}"
+    ssh azureuser@$middleware2ip "/home/azureuser/asl-project-2019-ruzhanskaia/start_3servers.sh ${middleware2ip} 11211 ${t}"
     sleep 10s
     for c in "${n_clients[@]}"; do
-        for value in {1..$repetitions}
+        for value in {1..3}
         do
     	# run script on client1
     	ssh azureuser@$client1ip "/home/azureuser/asl-project-2019-ruzhanskaia/experiment.sh ${middleware1ip} 11211 ${test_time} ${memtier_threads} ${value_size} ${c} ${key_size} &>> ${HOME}/client1_1.log" &
