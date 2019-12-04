@@ -16,6 +16,6 @@ pid2=$!
 /home/azureuser/memtier_benchmark/install/bin/memtier_benchmark --port=$populate_port --protocol=memcache_text --ratio=1:0 --hide-histogram --expiry-range=99999-100000 --key-maximum=$populate_key_size --server=$server3ip --test-time=$populate_time --clients=4 --threads=3 --data-size=$populate_size &
 pid3=$!
 
-wait pid1
-wait pid2
-wait pid3
+wait $pid1
+wait $pid2
+wait $pid3
