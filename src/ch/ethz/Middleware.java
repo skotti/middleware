@@ -50,7 +50,7 @@ public class Middleware {
     public Middleware(String myIp, int myPort, List<String> mcAddresses, int numThreadsPTP, boolean readSharded) {
         
         ConsoleAppender console = new ConsoleAppender();
-        String PATTERN = "%p %c{2}: %m";
+        String PATTERN = "%d{HH:mm:ss} %p %c{2}: %m";
         console.setLayout(new PatternLayout(PATTERN)); 
         console.setThreshold(Level.DEBUG);
         console.activateOptions();
