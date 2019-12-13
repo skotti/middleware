@@ -148,7 +148,6 @@ public class WorkerThread extends Thread {
                 if (!parts[0].equals("VALUE")) {
                     if (parts[0].startsWith("END")) {
                         //cache miss
-                        logger.info("CACHE MISS\n");
                         stats.cacheMisses += 1;
                         answerString.append("END\r\n");
                         sendResponse(answerString.toString(), 
