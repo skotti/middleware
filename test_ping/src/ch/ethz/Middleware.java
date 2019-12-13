@@ -46,13 +46,6 @@ public class Middleware {
 
         while (true) {
             
-            if (this.connections.isEmpty()) {
-                Socket s = this.queue.take();
-                Connection con = new Connection(s, new BufferedReader(new InputStreamReader(s.getInputStream())), 
-                                                                     new PrintWriter(s.getOutputStream(), true), new char[256]);
-                this.connections.add(con);
-            }
-
             for (ListIterator<Connection> iter = this.connections.listIterator(); iter.hasNext();) {
                 
                 Connection curConn = iter.next();
