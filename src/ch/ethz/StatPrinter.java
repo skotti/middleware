@@ -37,19 +37,19 @@ class StatPrinter extends TimerTask {
             WorkerStats cur = curStats.get(i);
             WorkerStats prev = prevStats.get(i);
 
-            globalStats.append("\n").append(Long.toString(curStats.get(i).worker)).append(" ");
+            globalStats.append("\n").append(curStats.get(i).worker).append(" ");
             globalStats.append(cur.timeInQueue - prev.timeInQueue).append(" ");
-            globalStats.append(Long.toString(cur.timeInParseAndSend - prev.timeInParseAndSend)).append(" ");
-            globalStats.append(Long.toString(cur.timeInServer - prev.timeInServer)).append(" ");
-            globalStats.append(Long.toString(cur.timeToProcessRequest - prev.timeToProcessRequest)).append(" ");
-            globalStats.append(Long.toString(cur.timeToProcessRequestAndQueueTime - prev.timeToProcessRequestAndQueueTime)).append(" ");
-            globalStats.append(Long.toString(cur.sizeOfQueue - prev.sizeOfQueue)).append(" ");
-            globalStats.append(Long.toString(cur.requestsLeftQueue - prev.requestsLeftQueue)).append(" ");
-            globalStats.append(Long.toString(cur.successfulRequests - prev.successfulRequests)).append(" ");
+            globalStats.append(cur.timeInParseAndSend - prev.timeInParseAndSend).append(" ");
+            globalStats.append(cur.timeInServer - prev.timeInServer).append(" ");
+            globalStats.append(cur.timeToProcessRequest - prev.timeToProcessRequest).append(" ");
+            globalStats.append(cur.timeToProcessRequestAndQueueTime - prev.timeToProcessRequestAndQueueTime).append(" ");
+            globalStats.append(cur.sizeOfQueue - prev.sizeOfQueue).append(" ");
+            globalStats.append(cur.requestsLeftQueue - prev.requestsLeftQueue).append(" ");
+            globalStats.append(cur.successfulRequests - prev.successfulRequests).append(" ");
             for (int j = 0; j < cur.nServers; j++) {
-                globalStats.append(Long.toString(cur.requestsPerServer[j] - prev.requestsPerServer[j])).append(" ");
+                globalStats.append(cur.requestsPerServer[j] - prev.requestsPerServer[j]).append(" ");
             }
-            globalStats.append(Long.toString(cur.cacheMisses - prev.cacheMisses)).append(" ");
+            globalStats.append(cur.cacheMisses - prev.cacheMisses).append(" ");
             if (cur.errors.length() != prev.errors.length()) {
                 globalStats.append("\nERRORS:\n");
                 globalStats.append(cur.errors.substring(cur.errors.length() - prev.errors.length()));
@@ -57,7 +57,7 @@ class StatPrinter extends TimerTask {
             long timeElapsed = Duration.between(
                     timeOfLastDump, 
                     time).toMillis();
-            globalStats.append(Long.toString(timeElapsed));
+            globalStats.append(timeElapsed);
         }
         logger.debug(globalStats.toString()+"\n");
         for (int i = 0; i < this.threads.size(); i++) {
@@ -81,24 +81,24 @@ class StatPrinter extends TimerTask {
             WorkerStats cur = curStats.get(i);
             WorkerStats prev = prevStats.get(i);
 
-            globalStats.append("\n").append(Long.toString(curStats.get(i).worker)).append(" ");
+            globalStats.append("\n").append(curStats.get(i).worker).append(" ");
             globalStats.append(cur.timeInQueue - prev.timeInQueue).append(" ");
-            globalStats.append(Long.toString(cur.timeInParseAndSend - prev.timeInParseAndSend)).append(" ");
-            globalStats.append(Long.toString(cur.timeInServer - prev.timeInServer)).append(" ");
-            globalStats.append(Long.toString(cur.timeToProcessRequest - prev.timeToProcessRequest)).append(" ");
-            globalStats.append(Long.toString(cur.timeToProcessRequestAndQueueTime - prev.timeToProcessRequestAndQueueTime)).append(" ");
-            globalStats.append(Long.toString(cur.sizeOfQueue - prev.sizeOfQueue)).append(" ");
-            globalStats.append(Long.toString(cur.requestsLeftQueue - prev.requestsLeftQueue)).append(" ");
-            globalStats.append(Long.toString(cur.successfulRequests - prev.successfulRequests)).append(" ");
+            globalStats.append(cur.timeInParseAndSend - prev.timeInParseAndSend).append(" ");
+            globalStats.append(cur.timeInServer - prev.timeInServer).append(" ");
+            globalStats.append(cur.timeToProcessRequest - prev.timeToProcessRequest).append(" ");
+            globalStats.append(cur.timeToProcessRequestAndQueueTime - prev.timeToProcessRequestAndQueueTime).append(" ");
+            globalStats.append(cur.sizeOfQueue - prev.sizeOfQueue).append(" ");
+            globalStats.append(cur.requestsLeftQueue - prev.requestsLeftQueue).append(" ");
+            globalStats.append(cur.successfulRequests - prev.successfulRequests).append(" ");
             for (int j = 0; j < cur.nServers; j++) {
-                globalStats.append(Long.toString(cur.requestsPerServer[j] - prev.requestsPerServer[j])).append(" ");
+                globalStats.append(cur.requestsPerServer[j] - prev.requestsPerServer[j]).append(" ");
             }
-            globalStats.append(Long.toString(cur.cacheMisses - prev.cacheMisses));
+            globalStats.append(cur.cacheMisses - prev.cacheMisses);
             if (cur.errors.length() != prev.errors.length()) {
                 globalStats.append("\nERRORS:\n");
                 globalStats.append(cur.errors.substring(cur.errors.length() - prev.errors.length()));
             }
-            globalStats.append(" ").append(Long.toString(5000));
+            globalStats.append(" ").append(5000);
             
         }
         logger.debug(globalStats.toString()+"\n");

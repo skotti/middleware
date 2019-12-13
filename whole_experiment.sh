@@ -17,14 +17,20 @@ for v in "${value_size[@]}"; do
     /home/azureuser/asl-project-2019-ruzhanskaia/populate_3servers.sh $populate_port $v $populate_time $key_size
     /home/azureuser/asl-project-2019-ruzhanskaia/3cl_1ser.sh $v $test_time $repetitions $key_size
     echo "First completed"
+    date +"%T"
     /home/azureuser/asl-project-2019-ruzhanskaia/3cl_3ser.sh $v $test_time $repetitions $key_size
     echo "Second completed"
+    date +"%T"
     /home/azureuser/asl-project-2019-ruzhanskaia/3cl_1mid_1ser.sh $v $test_time $repetitions $key_size
     echo "Third completed"
+    date +"%T"
     /home/azureuser/asl-project-2019-ruzhanskaia/3cl_1mid_3ser.sh $v $test_time $repetitions $key_size
     echo "Fourth completed"
+    date +"%T"
     /home/azureuser/asl-project-2019-ruzhanskaia/3cl_2mid_1ser.sh $v $test_time $repetitions $key_size
     echo "Fifth completed"
+    date +"%T"
     /home/azureuser/asl-project-2019-ruzhanskaia/3cl_2mid_3ser.sh $v $test_time $repetitions $key_size
     echo "Sixth completed"
+    date +"%T"
 done
