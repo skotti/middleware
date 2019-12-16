@@ -23,3 +23,9 @@ Equation*.ipynb - for 2k models
 Queueing theory - for Queueing theory computations.
 
 All script contain custom passes, so in odrder to run them the corret passes should be provided. In general these are pathes to experiments and logs received from them
+
+Please, descard scripts with "first middleware" and "second middleware" naming
+
+There is a bunch of scripts to run each experiment.
+They are named according to the experiment and are situated in the root folder.
+The sript whole experiment launches them all.
