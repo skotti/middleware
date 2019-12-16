@@ -1,0 +1,25 @@
+For middleware compilation log4j library should be added
+The middleware can be launched with the start.sh script, with passing there necessary arguments.
+The experimental result are situated in zip archive.
+Part1 : 1 server
+Part1_repeat: 1 server, try less clients
+Part2 : 3 servers
+Part3: 1 middleware, 1 server
+Part4: 1 middleware, 3 servers
+Part5: 2 middlewares, 1 server
+Part6: 2 middlewares, 3 servers
+test_ping - this was where different number of clients were tested in order to determine the ping time from client to middleware.
+mw_1.log
+mw_2.log
+- these are middleware logs from different experiments
+stat_*.csv - statistics from dstat
+The photos attached are just screenshots when each part for a signle value size ended in order to search more easily for necessary entries in dstat logs.
+
+There are also logs, which fully automates the analysis of the data.
+They are in the form of the iPython nothebook, as it was the most convenietn way to work with plots, text and code simultaneously.
+They are named again according to which part they refer to.
+Part1 - Part6*.ipynb for the plots
+Equation*.ipynb - for 2k models
+Queueing theory - for Queueing theory computations.
+
+All script contain custom passes, so in odrder to run them the corret passes should be provided. In general these are pathes to experiments and logs received from them
